@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OnePay — Pan-African Payments</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple-dark: #26215C;
+    --purple-mid: #534AB7;
+    --purple-light: #EEEDFE;
+    --purple-border: #CECBF6;
+    --gold: #EF9F27;
+    --gold-light: #FAEEDA;
+    --bg: #f5f3ff;
+    --white: #ffffff;
+    --text-dark: #26215C;
+    --text-mid: #534AB7;
+    --text-muted: #888780;
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --teal: #0F6E56;
+    --teal-bg: #E1F5EE;
+    --font-head: 'Sora', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: var(--font-body); background: var(--purple-dark); }
+
+  /* ── CLICK FIX: ensure nothing invisible blocks touches ── */
+  .app { touch-action: manipulation; }
+  button, [onclick], .bnav, .qa-item, .cat-tab, .send-method-pill,
+  .country-chip, .airtime-card, .data-plan-card, .network-card,
+  .txn-card, .menu-item, .back-row, .splash-cta, .splash-outline,
+  .btn-primary, .logout-btn {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(83,74,183,0.15);
+    touch-action: manipulation;
+    user-select: none;
+  }
+  * { -webkit-touch-callout: none; }
+
+  /* ─── LAYOUT ─── */
+  .app { max-width: 390px; margin: 0 auto; min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; flex-direction: column; flex: 1; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ─── STATUS BAR ─── */
+  .status-bar { display: flex; justify-content: space-between; padding: 12px 20px 6px; background: var(--purple-dark); }
+  .status-bar span { font-size: 11px; color: #9985cc; font-family: var(--font-head); }
+
+  /* ─── SPLASH ─── */
+  #s-splash { background: var(--purple-dark); align-items: center; justify-content: center; padding: 2rem 2rem 3rem; }
+  .splash-logo { width: 80px; height: 80px; border-radius: 24px; background: var(--purple-mid); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border: 2px solid var(--gold); }
+  .splash-logo svg { width: 44px; height: 44px; }
+  .splash-name { font-family: var(--font-head); font-size: 36px; font-weight: 600; color: var(--gold); letter-spacing: -1px; margin-bottom: 6px; }
+  .splash-tagline { font-size: 14px; color: #AFA9EC; text-align: center; line-height: 1.6; margin-bottom: 60px; max-width: 260px; }
+  .splash-cta { width: 100%; background: var(--gold); color: var(--purple-dark); font-family: var(--font-head); font-size: 15px; font-weight: 600; border: none; border-radius: 14px; padding: 16px; cursor: pointer; margin-bottom: 12px; transition: opacity 0.2s; }
+  .splash-cta:hover { opacity: 0.9; }
+  .splash-outline { width: 100%; background: transparent; color: var(--purple-border); font-family: var(--font-head); font-size: 15px; border: 1px solid #3C3489; border-radius: 14px; padding: 16px; cursor: pointer; }
+  .splash-footer { margin-top: 32px; font-size: 11px; color: #534AB7; text-align: center; }
+
+  /* ─── SIGN UP ─── */
+  #s-signup { background: var(--bg); }
+  .form-header { background: var(--purple-dark); padding: 16px 20px 24px; }
+  .back-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; cursor: pointer; }
+  .back-circle { width: 32px; height: 32px; border-radius: 50%; background: #3C3489; display: flex; align-items: center; justify-content: center; }
+  .back-label { font-size: 12px; color: #9985cc; }
+  .form-title { font-family: var(--font-head); font-size: 22px; font-weight: 600; color: white; margin-bottom: 4px; }
+  .form-sub { font-size: 13px; color: #9985cc; }
+  .form-body { padding: 20px; flex: 1; overflow-y: auto; }
+  .field-group { margin-bottom: 14px; }
+  .field-label { font-size: 11px; font-weight: 500; color: var(--purple-mid); margin-bottom: 5px; letter-spacing: 0.03em; }
+  .field-input { width: 100%; background: white; border: 1px solid var(--purple-border); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--text-dark); font-family: var(--font-body); outline: none; transition: border-color 0.2s; }
+  .field-input:focus { border-color: var(--purple-mid); }
+  .field-input::placeholder { color: #C5C0E8; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .terms-text { font-size: 11px; color: var(--text-muted); text-align: center; margin: 14px 0; line-height: 1.6; }
+  .terms-text a { color: var(--gold); text-decoration: none; }
+  .btn-primary { width: 100%; background: var(--purple-mid); color: white; font-family: var(--font-head); font-size: 15px; font-weight: 600; border: none; border-radius: 14px; padding: 16px; cursor: pointer; transition: background 0.2s; }
+  .btn-primary:hover { background: var(--purple-dark); }
+
+  /* ─── LOGIN ─── */
+  #s-login { background: var(--bg); }
+  .login-body { padding: 24px 20px; flex: 1; }
+  .login-logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .login-logo-sm { width: 36px; height: 36px; border-radius: 10px; background: var(--purple-mid); display: flex; align-items: center; justify-content: center; }
+  .login-logo-sm svg { width: 20px; height: 20px; }
+  .login-name { font-family: var(--font-head); font-size: 20px; font-weight: 600; color: var(--gold); }
+  .pin-label { font-size: 12px; color: var(--text-muted); text-align: center; margin: 16px 0 10px; }
+  .pin-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 8px; }
+  .pin-dot { width: 40px; height: 40px; border-radius: 50%; background: white; border: 1.5px solid var(--purple-border); display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .pin-dot.filled { background: var(--gold); border-color: var(--gold); }
+  .forgot { font-size: 12px; color: var(--gold); text-align: right; margin-bottom: 16px; cursor: pointer; }
+  .divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; }
+  .divider-line { flex: 1; height: 1px; background: var(--purple-border); }
+  .divider-text { font-size: 11px; color: var(--text-muted); }
+  .social-btn { width: 100%; background: white; border: 1px solid var(--purple-border); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--text-dark); font-family: var(--font-body); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+  .signup-link { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 16px; }
+  .signup-link span { color: var(--gold); cursor: pointer; font-weight: 500; }
+
+  /* ─── DASHBOARD ─── */
+  #s-dashboard { background: var(--bg); }
+  .dash-header { background: var(--purple-dark); padding: 14px 20px 20px; }
+  .dash-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .greeting-small { font-size: 11px; color: #AFA9EC; margin-bottom: 2px; }
+  .greeting-name { font-family: var(--font-head); font-size: 17px; font-weight: 600; color: white; }
+  .notif-btn { width: 36px; height: 36px; border-radius: 50%; background: #3C3489; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+  .notif-badge { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); position: absolute; top: 5px; right: 5px; border: 2px solid var(--purple-dark); }
+  .balance-card { background: var(--purple-mid); border-radius: 18px; padding: 18px; border: 1px solid #6B62C8; }
+  .bal-label { font-size: 11px; color: #AFA9EC; margin-bottom: 4px; }
+  .bal-amount { font-family: var(--font-head); font-size: 30px; font-weight: 600; color: white; letter-spacing: -1px; margin-bottom: 2px; }
+  .bal-currency { font-size: 12px; color: var(--gold); margin-bottom: 14px; }
+  .bal-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .bal-stat { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px 12px; }
+  .bal-stat-label { font-size: 10px; color: #AFA9EC; margin-bottom: 3px; }
+  .bal-stat-val { font-family: var(--font-head); font-size: 15px; font-weight: 600; color: white; }
+  .bal-stat-change { font-size: 10px; margin-top: 1px; }
+
+  .dash-body { padding: 16px 20px; flex: 1; overflow-y: auto; }
+  .section-title { font-family: var(--font-head); font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px; }
+  .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+  .qa-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+  .qa-icon { width: 52px; height: 52px; border-radius: 16px; background: white; border: 1px solid var(--purple-border); display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .qa-icon:hover { background: var(--purple-light); }
+  .qa-icon svg { width: 22px; height: 22px; }
+  .qa-label { font-size: 10px; color: var(--text-mid); font-weight: 500; }
+
+  .countries-row { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
+  .countries-row::-webkit-scrollbar { display: none; }
+  .country-chip { display: flex; align-items: center; gap: 6px; background: white; border: 1px solid var(--purple-border); border-radius: 24px; padding: 6px 12px; white-space: nowrap; cursor: pointer; transition: all 0.2s; }
+  .country-chip.active { background: var(--purple-mid); border-color: var(--purple-mid); }
+  .country-chip .flag { font-size: 14px; }
+  .country-chip .cname { font-size: 11px; color: var(--purple-mid); font-weight: 500; }
+  .country-chip.active .cname { color: white; }
+
+  .txn-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 80px; }
+  .txn-card { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid var(--purple-border); border-radius: 14px; padding: 12px 14px; cursor: pointer; transition: border-color 0.2s; }
+  .txn-card:hover { border-color: var(--purple-mid); }
+  .txn-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .txn-info { flex: 1; }
+  .txn-name { font-size: 13px; font-weight: 500; color: var(--text-dark); margin-bottom: 2px; }
+  .txn-detail { font-size: 11px; color: var(--text-muted); }
+  .txn-right { text-align: right; }
+  .txn-amount { font-family: var(--font-head); font-size: 13px; font-weight: 600; }
+  .txn-amount.out { color: var(--red); }
+  .txn-amount.in { color: var(--green); }
+  .txn-time { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .status-pill { font-size: 9px; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-top: 2px; }
+  .pill-ok { background: var(--green-bg); color: var(--green); }
+  .pill-pending { background: var(--gold-light); color: #854F0B; }
+
+  /* ─── BOTTOM NAV ─── */
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; background: white; border-top: 1px solid var(--purple-border); display: flex; justify-content: space-around; padding: 10px 0 16px; z-index: 100; }
+  .bnav { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 0 12px; }
+  .bnav svg { width: 22px; height: 22px; }
+  .bnav-label { font-size: 9px; color: var(--text-muted); font-weight: 500; }
+  .bnav.active .bnav-label { color: var(--purple-mid); }
+  .bnav-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
+
+  /* ─── SEND ─── */
+  #s-send { background: var(--bg); }
+  .send-header { background: var(--purple-dark); padding: 14px 20px 20px; }
+  .send-body { padding: 16px 20px; flex: 1; overflow-y: auto; padding-bottom: 100px; }
+  .amount-box { background: var(--purple-dark); border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+  .amount-label { font-size: 11px; color: #AFA9EC; margin-bottom: 8px; }
+  .amount-display { font-family: var(--font-head); font-size: 32px; font-weight: 600; color: white; letter-spacing: -1px; }
+  .amount-currency-tag { font-size: 13px; color: var(--gold); margin-top: 2px; }
+  .rate-strip { display: flex; justify-content: space-between; align-items: center; background: var(--purple-light); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; }
+  .rate-left { font-size: 11px; color: var(--purple-mid); }
+  .rate-right { font-family: var(--font-head); font-size: 12px; font-weight: 600; color: var(--text-dark); }
+  .recv-box { background: white; border: 1px solid var(--purple-border); border-radius: 14px; padding: 14px; margin-bottom: 16px; }
+  .recv-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+  .recv-row-label { font-size: 12px; color: var(--text-muted); }
+  .recv-row-val { font-size: 13px; font-weight: 500; color: var(--text-dark); }
+  .recv-row-val.highlight { color: var(--purple-mid); font-family: var(--font-head); font-size: 15px; font-weight: 600; }
+  .recv-divider { height: 1px; background: var(--purple-border); margin: 6px 0; }
+
+  /* ─── AI ASSISTANT ─── */
+  #s-ai { background: var(--bg); }
+  .ai-header { background: var(--purple-dark); padding: 14px 20px 14px; }
+  .ai-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--purple-mid); border-radius: 20px; padding: 4px 10px; margin-top: 6px; }
+  .ai-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .ai-badge-text { font-size: 10px; color: #CECBF6; }
+  .chat-area { flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-bottom: 10px; }
+  .msg-row { display: flex; gap: 8px; align-items: flex-end; }
+  .msg-row.user { flex-direction: row-reverse; }
+  .msg-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; font-family: var(--font-head); flex-shrink: 0; }
+  .bubble { max-width: 220px; padding: 10px 13px; font-size: 12px; line-height: 1.6; }
+  .msg-row.ai .bubble { background: white; border: 1px solid var(--purple-border); border-radius: 16px 16px 16px 4px; color: var(--text-dark); }
+  .msg-row.user .bubble { background: var(--purple-mid); border-radius: 16px 16px 4px 16px; color: white; }
+  .msg-time { font-size: 9px; color: var(--text-muted); margin-top: 3px; }
+  .typing-bubble { display: flex; gap: 4px; align-items: center; padding: 12px 14px; background: white; border: 1px solid var(--purple-border); border-radius: 16px 16px 16px 4px; }
+  .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: #AFA9EC; animation: bounce 1.2s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .chips-row { display: flex; gap: 6px; padding: 0 16px 8px; flex-wrap: wrap; }
+  .chip { font-size: 10px; padding: 5px 10px; border-radius: 20px; border: 1px solid var(--purple-border); color: var(--purple-mid); background: white; cursor: pointer; transition: all 0.15s; }
+  .chip:hover { background: var(--purple-light); }
+  .chat-input-bar { display: flex; gap: 10px; padding: 10px 16px 20px; background: white; border-top: 1px solid var(--purple-border); align-items: center; }
+  .chat-field { flex: 1; background: var(--purple-light); border: 1px solid var(--purple-border); border-radius: 24px; padding: 10px 16px; font-size: 12px; color: var(--text-dark); font-family: var(--font-body); outline: none; }
+  .chat-field::placeholder { color: #AFA9EC; }
+  .chat-send { width: 36px; height: 36px; border-radius: 50%; background: var(--purple-mid); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+  .chat-send:hover { background: var(--purple-dark); }
+  .chat-send svg { width: 16px; height: 16px; }
+
+  /* ─── FRAUD ─── */
+  #s-fraud { background: var(--bg); }
+  .fraud-body { padding: 14px 16px; flex: 1; overflow-y: auto; padding-bottom: 80px; }
+  .fraud-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .fstat { border-radius: 14px; padding: 14px; }
+  .fstat-label { font-size: 10px; margin-bottom: 4px; font-weight: 500; }
+  .fstat-val { font-family: var(--font-head); font-size: 24px; font-weight: 600; }
+  .alert-card { background: white; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--purple-border); }
+  .alert-card.danger { border-color: #F09595; }
+  .alert-card.warn { border-color: #FAC775; }
+  .alert-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .alert-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .alert-icon svg { width: 18px; height: 18px; }
+  .alert-title { font-size: 13px; font-weight: 500; color: var(--text-dark); font-family: var(--font-head); }
+  .alert-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .risk-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .risk-bar-label { font-size: 10px; color: var(--text-muted); width: 56px; }
+  .risk-track { flex: 1; height: 6px; background: var(--purple-light); border-radius: 3px; overflow: hidden; }
+  .risk-fill { height: 100%; border-radius: 3px; }
+  .risk-pct { font-size: 10px; font-weight: 600; width: 30px; text-align: right; }
+  .alert-body-text { font-size: 12px; color: #444; line-height: 1.6; margin-bottom: 10px; }
+  .alert-actions { display: flex; gap: 8px; }
+  .action-btn { flex: 1; padding: 9px; border-radius: 10px; font-size: 11px; font-weight: 600; font-family: var(--font-head); border: none; cursor: pointer; transition: opacity 0.2s; }
+  .action-btn:hover { opacity: 0.85; }
+  .btn-block { background: var(--red-bg); color: var(--red); }
+  .btn-ok { background: var(--green-bg); color: var(--green); }
+  .btn-dismiss { background: var(--purple-light); color: var(--purple-mid); }
+
+  /* ─── FX ADVISOR ─── */
+  #s-fx { background: var(--bg); }
+  .fx-body { padding: 14px 16px; flex: 1; overflow-y: auto; padding-bottom: 80px; }
+  .route-pills { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+  .route-pills::-webkit-scrollbar { display: none; }
+  .route-pill { font-size: 11px; padding: 6px 12px; border-radius: 24px; border: 1px solid var(--purple-border); color: var(--purple-mid); white-space: nowrap; cursor: pointer; background: white; font-weight: 500; transition: all 0.2s; }
+  .route-pill.active { background: var(--purple-mid); color: white; border-color: var(--purple-mid); }
+  .fx-main-card { background: var(--purple-dark); border-radius: 20px; padding: 18px; margin-bottom: 14px; }
+  .fx-route-label { font-size: 11px; color: #AFA9EC; margin-bottom: 4px; }
+  .fx-rate-big { font-family: var(--font-head); font-size: 26px; font-weight: 600; color: var(--gold); letter-spacing: -0.5px; margin-bottom: 2px; }
+  .fx-change { font-size: 12px; margin-bottom: 14px; }
+  .fx-bars { display: flex; align-items: flex-end; gap: 5px; height: 60px; margin-bottom: 6px; }
+  .fx-bar { flex: 1; border-radius: 4px 4px 0 0; background: #3C3489; transition: background 0.3s; }
+  .fx-bar.best { background: var(--gold); }
+  .fx-day-labels { display: flex; }
+  .fx-day-label { flex: 1; font-size: 9px; color: #AFA9EC; text-align: center; }
+  .fx-day-label.today { color: var(--gold); font-weight: 600; }
+  .fx-advice-box { background: #3C3489; border-radius: 12px; padding: 12px; margin-top: 12px; }
+  .fx-advice-label { font-size: 10px; color: #AFA9EC; margin-bottom: 4px; }
+  .fx-advice-text { font-size: 12px; color: #CECBF6; line-height: 1.6; }
+  .insight-card { background: white; border: 1px solid var(--purple-border); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start; }
+  .insight-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .insight-icon svg { width: 18px; height: 18px; }
+  .insight-title { font-size: 13px; font-weight: 500; color: var(--text-dark); font-family: var(--font-head); margin-bottom: 3px; }
+  .insight-text { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ─── PROFILE ─── */
+  #s-profile { background: var(--bg); }
+  .prof-header { background: var(--purple-dark); padding: 14px 20px 28px; display: flex; flex-direction: column; align-items: center; }
+  .prof-avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--purple-mid); border: 3px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 22px; font-weight: 600; color: white; margin-bottom: 10px; }
+  .prof-name { font-family: var(--font-head); font-size: 18px; font-weight: 600; color: white; margin-bottom: 3px; }
+  .prof-id { font-size: 11px; color: #AFA9EC; margin-bottom: 10px; }
+  .kyc-chip { display: flex; align-items: center; gap: 5px; background: var(--green-bg); border-radius: 20px; padding: 5px 12px; }
+  .kyc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .kyc-label { font-size: 11px; color: var(--green); font-weight: 500; }
+  .prof-body { padding: 16px 20px; flex: 1; overflow-y: auto; padding-bottom: 100px; }
+  .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .wallet-card { background: white; border: 1px solid var(--purple-border); border-radius: 14px; padding: 12px; }
+  .wallet-flag { font-size: 20px; margin-bottom: 5px; }
+  .wallet-currency { font-size: 10px; color: var(--text-muted); margin-bottom: 3px; }
+  .wallet-balance { font-family: var(--font-head); font-size: 14px; font-weight: 600; color: var(--text-dark); }
+  .wallet-add { background: white; border: 1.5px dashed var(--purple-border); border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; cursor: pointer; }
+  .wallet-add-icon { font-size: 22px; color: var(--purple-mid); font-weight: 300; line-height: 1; }
+  .wallet-add-text { font-size: 10px; color: var(--text-muted); }
+  .menu-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .menu-item { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid var(--purple-border); border-radius: 14px; padding: 12px 14px; cursor: pointer; transition: border-color 0.2s; }
+  .menu-item:hover { border-color: var(--purple-mid); }
+  .menu-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .menu-icon svg { width: 18px; height: 18px; }
+  .menu-info { flex: 1; }
+  .menu-title { font-size: 13px; font-weight: 500; color: var(--text-dark); font-family: var(--font-head); }
+  .menu-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .menu-arrow svg { width: 14px; height: 14px; opacity: 0.4; }
+  .logout-btn { width: 100%; background: var(--red-bg); border: 1px solid #F09595; border-radius: 14px; padding: 14px; color: var(--red); font-family: var(--font-head); font-size: 14px; font-weight: 600; cursor: pointer; }
+
+  select.field-input { appearance: none; }
+
+  .transfer-type-card { background: white; border: 2px solid var(--purple-border); border-radius: 16px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .transfer-type-card.active { border-color: var(--purple-mid); background: var(--purple-light); }
+  .tt-title { font-family: var(--font-head); font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 2px; }
+  .tt-sub { font-size: 10px; color: var(--text-muted); }
+  .transfer-type-card.active .tt-title { color: var(--purple-mid); }
+  .send-method-pill { font-size: 11px; padding: 7px 10px; border-radius: 24px; border: 1px solid var(--purple-border); color: var(--text-muted); background: white; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-weight: 500; }
+  .send-method-pill.active { background: var(--purple-mid); color: white; border-color: var(--purple-mid); }
+  .quick-amount { font-size: 11px; padding: 5px 10px; border-radius: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: white; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+  .quick-amount:hover { background: rgba(255,255,255,0.3); }
+
+  /* Category tabs */
+  .cat-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab { font-size: 12px; padding: 8px 14px; border-radius: 24px; border: 1px solid var(--purple-border); color: var(--purple-mid); background: white; cursor: pointer; white-space: nowrap; font-weight: 500; transition: all 0.2s; font-family: var(--font-head); }
+  .cat-tab.active { background: var(--purple-mid); color: white; border-color: var(--purple-mid); }
+
+  /* Method pills row */
+  .method-pills-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+  .method-pills-row::-webkit-scrollbar { display: none; }
+
+  /* Bank search dropdown */
+  .bank-dropdown { display: none; background: white; border: 1px solid var(--purple-border); border-radius: 12px; margin-top: 4px; max-height: 180px; overflow-y: auto; box-shadow: 0 6px 24px rgba(83,74,183,0.14); z-index: 10; position: relative; }
+  .bank-option { padding: 10px 14px; font-size: 13px; color: var(--text-dark); cursor: pointer; border-bottom: 0.5px solid var(--purple-border); transition: background 0.15s; }
+  .bank-option:last-child { border-bottom: none; }
+  .bank-option:hover { background: var(--purple-light); }
+  .bank-option .bank-type { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .bank-chosen { background: var(--purple-light); border: 1px solid var(--purple-border); border-radius: 10px; padding: 10px 12px; margin-top: 6px; display: flex; align-items: center; justify-content: space-between; }
+  .bank-chosen span:first-child { font-size: 13px; font-weight: 500; color: var(--purple-mid); }
+  .clear-bank { font-size: 11px; color: var(--text-muted); cursor: pointer; }
+  .verified-chip { background: var(--green-bg); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; color: var(--green); font-weight: 500; }
+
+  /* Network grid */
+  .network-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 4px; }
+  .network-card { background: white; border: 1.5px solid var(--purple-border); border-radius: 14px; padding: 10px 6px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .network-card.active { border-color: var(--purple-mid); background: var(--purple-light); }
+  .net-logo { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; margin: 0 auto 5px; font-family: var(--font-head); }
+  .net-name { font-size: 10px; color: var(--text-dark); font-weight: 500; }
+
+  /* Airtime grid */
+  .airtime-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .airtime-card { background: white; border: 1.5px solid var(--purple-border); border-radius: 12px; padding: 10px 6px; text-align: center; font-size: 12px; font-weight: 600; color: var(--text-dark); cursor: pointer; transition: all 0.2s; font-family: var(--font-head); }
+  .airtime-card.active { background: var(--purple-mid); color: white; border-color: var(--purple-mid); }
+  .airtime-card:hover { border-color: var(--purple-mid); }
+
+  /* Data plans */
+  .data-plans { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .data-plan-card { background: white; border: 1.5px solid var(--purple-border); border-radius: 14px; padding: 12px 10px; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .data-plan-card.active { border-color: var(--purple-mid); background: var(--purple-light); }
+  .plan-size { font-family: var(--font-head); font-size: 15px; font-weight: 600; color: var(--text-dark); margin-bottom: 3px; }
+  .plan-price { font-size: 13px; font-weight: 600; color: var(--gold); margin-bottom: 2px; }
+  .plan-validity { font-size: 10px; color: var(--text-muted); }
+  .data-plan-card.active .plan-size { color: var(--purple-mid); }
+</style>
+</head>
+<body>
+<script>
+// Core navigation — must load before any HTML onclick fires
+function go(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  var el = document.getElementById(id);
+  if (el) { el.classList.add('active'); }
+  window.scrollTo(0, 0);
+}
+// Make go() available immediately on window
+window.go = go;
+</script>
+<div class="app">
+
+  <!-- ══ SPLASH ══ -->
+  <div class="screen active" id="s-splash">
+    <div class="status-bar" style="background:var(--purple-dark);"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="splash-logo">
+      <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="18" stroke="#EF9F27" stroke-width="2"/><path d="M13 22h18M22 13l9 9-9 9" stroke="#EF9F27" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="splash-name">OnePay</div>
+    <div class="splash-tagline">Fast, secure payments for Nigeria. Bank transfers, airtime & data — all in one app.</div>
+    <button class="splash-cta" onclick="go('s-signup')">Create free account</button>
+    <button class="splash-outline" onclick="go('s-login')">I already have an account</button>
+    <div class="splash-footer">Trusted by 50,000+ Africans · Licensed & Regulated</div>
+  </div>
+
+  <!-- ══ SIGN UP ══ -->
+  <div class="screen" id="s-signup">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="form-header">
+      <div class="back-row" onclick="go('s-splash')">
+        <div class="back-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="back-label">Back</span>
+      </div>
+      <div class="form-title">Create account</div>
+      <div class="form-sub">Join OnePay — takes only 2 minutes</div>
+    </div>
+    <div class="form-body">
+      <div class="field-group"><div class="field-label">Full name</div><input id="su-name" class="field-input" placeholder="e.g. Adewale Okonkwo" type="text"></div>
+      <div class="field-group"><div class="field-label">Email address</div><input id="su-email" class="field-input" placeholder="you@email.com" type="email"></div>
+      <div class="field-group"><div class="field-label">Phone number</div><input id="su-phone" class="field-input" placeholder="+234 801 234 5678" type="tel"></div>
+      <div class="row2">
+        <div class="field-group"><div class="field-label">Country</div>
+          <select id="su-country" class="field-input"><option>Nigeria</option><option>Ghana</option><option>Kenya</option><option>South Africa</option><option>Ethiopia</option><option>Senegal</option></select>
+        </div>
+        <div class="field-group"><div class="field-label">Currency</div>
+          <select id="su-currency" class="field-input"><option>NGN</option><option>GHS</option><option>KES</option><option>ZAR</option><option>ETB</option><option>XOF</option></select>
+        </div>
+      </div>
+      <div class="field-group"><div class="field-label">Password (min 6 characters)</div><input id="su-password" class="field-input" placeholder="Create a strong password" type="password"></div>
+      <div class="terms-text">By continuing you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></div>
+      <div id="signup-error" style="display:none;background:var(--red-bg);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--red);font-weight:500;"></div>
+      <button id="signup-btn" class="btn-primary" onclick="doSignup()">Create my account</button>
+    </div>
+  </div>
+
+  <!-- ══ LOGIN ══ -->
+  <div class="screen" id="s-login">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="form-header">
+      <div class="back-row" onclick="go('s-splash')">
+        <div class="back-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="back-label">Back</span>
+      </div>
+    </div>
+    <div class="login-body">
+      <div class="login-logo-row">
+        <div class="login-logo-sm"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#EF9F27" stroke-width="1.5"/><path d="M6 10h8M10 6l4 4-4 4" stroke="#EF9F27" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="login-name">OnePay</div>
+      </div>
+      <div class="form-title" style="color:var(--text-dark);">Welcome back</div>
+      <div class="form-sub" style="color:var(--text-muted);margin-bottom:20px;">Sign in to your account</div>
+      <div class="field-group"><div class="field-label">Email address</div><input id="li-email" class="field-input" placeholder="you@email.com" type="email"></div>
+      <div class="field-group"><div class="field-label">Password</div><input id="li-password" class="field-input" placeholder="Your password" type="password"></div>
+      <div class="forgot">Forgot password?</div>
+      <div id="login-error" style="display:none;background:var(--red-bg);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--red);font-weight:500;"></div>
+      <button id="login-btn" class="btn-primary" onclick="doLogin()">Sign in</button>
+      <div class="divider"><div class="divider-line"></div><div class="divider-text">or continue with</div><div class="divider-line"></div></div>
+      <button class="social-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#EA4335"/><text x="9" y="13" text-anchor="middle" fill="white" font-size="11" font-weight="bold">G</text></svg>
+        Continue with Google
+      </button>
+      <div class="signup-link">No account? <span onclick="go('s-signup')">Sign up free</span></div>
+    </div>
+  </div>
+
+  <!-- ══ DASHBOARD ══ -->
+  <div class="screen" id="s-dashboard">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="dash-header">
+      <div class="dash-top">
+        <div><div class="greeting-small">Good morning,</div><div class="greeting-name" id="dash-name">Welcome</div></div>
+        <div class="notif-btn" onclick="go('s-fraud')"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2a5 5 0 0 1 5 5v2.5l1.5 2.5H2.5L4 9.5V7a5 5 0 0 1 5-5z" stroke="#CECBF6" stroke-width="1.3"/><path d="M7 14.5a2 2 0 0 0 4 0" stroke="#CECBF6" stroke-width="1.3"/></svg><div class="notif-badge"></div></div>
+      </div>
+      <div class="balance-card">
+        <div class="bal-label">Total balance</div>
+        <div class="bal-amount">₦ 2,450,000</div>
+        <div class="bal-currency">Nigerian Naira · NGN</div>
+        <div class="bal-stats">
+          <div class="bal-stat"><div class="bal-stat-label">Money in</div><div class="bal-stat-val">₦580,000</div><div class="bal-stat-change" style="color:#5DCAA5;">+12% this month</div></div>
+          <div class="bal-stat"><div class="bal-stat-label">Money out</div><div class="bal-stat-val">₦310,500</div><div class="bal-stat-change" style="color:#F09595;">-4% this month</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dash-body">
+      <div class="section-title">Quick actions</div>
+      <div class="quick-grid">
+        <div class="qa-item" onclick="go('s-send')"><div class="qa-icon"><svg viewBox="0 0 22 22" fill="none"><path d="M3 11h16M14 5l6 6-6 6" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="qa-label">Send</div></div>
+        <div class="qa-item"><div class="qa-icon"><svg viewBox="0 0 22 22" fill="none"><path d="M19 11H3M8 5L2 11l6 6" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="qa-label">Receive</div></div>
+        <div class="qa-item"><div class="qa-icon"><svg viewBox="0 0 22 22" fill="none"><rect x="3" y="7" width="16" height="11" rx="2" stroke="#534AB7" stroke-width="1.8"/><path d="M3 11h16" stroke="#534AB7" stroke-width="1.8"/><circle cx="7" cy="15" r="1.2" fill="#534AB7"/></svg></div><div class="qa-label">Top up</div></div>
+        <div class="qa-item" onclick="go('s-ai')"><div class="qa-icon"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#534AB7" stroke-width="1.8"/><path d="M11 7v4l3 3" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round"/></svg></div><div class="qa-label">AI Help</div></div>
+      </div>
+      <div class="section-title">Quick send to banks</div>
+      <div class="countries-row">
+        <div class="country-chip active"><span class="flag">🏦</span><span class="cname">GTBank</span></div>
+        <div class="country-chip"><span class="flag">🏦</span><span class="cname">Access</span></div>
+        <div class="country-chip"><span class="flag">🏦</span><span class="cname">Zenith</span></div>
+        <div class="country-chip"><span class="flag">🏦</span><span class="cname">UBA</span></div>
+        <div class="country-chip"><span class="flag">🏦</span><span class="cname">First Bank</span></div>
+        <div class="country-chip"><span class="flag">🏘️</span><span class="cname">More MFBs</span></div>
+      </div>
+      <div class="section-title">Recent transactions</div>
+      <div class="txn-list" id="txn-list-live">
+        <div class="txn-card"><div class="txn-avatar" style="background:#EEEDFE;color:#534AB7;">CE</div><div class="txn-info"><div class="txn-name">Chisom Eze</div><div class="txn-detail">🇳🇬 Local · GTBank · Rent</div><div class="status-pill pill-ok">Delivered</div></div><div class="txn-right"><div class="txn-amount out">-₦150,000</div><div class="txn-time">Today, 9:05am</div></div></div>
+        <div class="txn-card"><div class="txn-avatar" style="background:#EEEDFE;color:#534AB7;">KO</div><div class="txn-info"><div class="txn-name">Kwame Otieno</div><div class="txn-detail">🇰🇪 Kenya · KES 3,825</div><div class="status-pill pill-ok">Delivered</div></div><div class="txn-right"><div class="txn-amount out">-₦45,000</div><div class="txn-time">Today, 8:23am</div></div></div>
+        <div class="txn-card"><div class="txn-avatar" style="background:#EAF3DE;color:#3B6D11;">BT</div><div class="txn-info"><div class="txn-name">Bola Tinuade</div><div class="txn-detail">🇳🇬 Local · Zenith Bank</div><div class="status-pill pill-ok">Received</div></div><div class="txn-right"><div class="txn-amount in">+₦200,000</div><div class="txn-time">Yesterday</div></div></div>
+        <div class="txn-card"><div class="txn-avatar" style="background:#EAF3DE;color:#3B6D11;">AM</div><div class="txn-info"><div class="txn-name">Amara Mensah</div><div class="txn-detail">🇬🇭 Ghana · GHS 3,200</div><div class="status-pill pill-ok">Received</div></div><div class="txn-right"><div class="txn-amount in">+₦120,000</div><div class="txn-time">Yesterday</div></div></div>
+        <div class="txn-card"><div class="txn-avatar" style="background:#FAEEDA;color:#854F0B;">TA</div><div class="txn-info"><div class="txn-name">Thabo Abebe</div><div class="txn-detail">🇿🇦 S. Africa · ZAR 680</div><div class="status-pill pill-pending">Pending</div></div><div class="txn-right"><div class="txn-amount out">-₦78,500</div><div class="txn-time">May 1</div></div></div>
+        <div class="txn-card"><div class="txn-avatar" style="background:#E1F5EE;color:#0F6E56;">FD</div><div class="txn-info"><div class="txn-name">Fatima Diallo</div><div class="txn-detail">🇸🇳 Senegal · XOF 85,000</div><div class="status-pill pill-ok">Delivered</div></div><div class="txn-right"><div class="txn-amount out">-₦67,000</div><div class="txn-time">May 1</div></div></div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="bnav active" onclick="go('s-dashboard')"><svg viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#534AB7" stroke-width="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#534AB7" stroke-width="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="#534AB7" stroke-width="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5" stroke="#534AB7" stroke-width="1.5"/></svg><div class="bnav-label" style="color:var(--purple-mid);">Home</div><div class="bnav-dot"></div></div>
+      <div class="bnav" onclick="go('s-send')"><svg viewBox="0 0 22 22" fill="none"><path d="M3 11h16M14 5l6 6-6 6" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="bnav-label">Send</div></div>
+      <div class="bnav" onclick="go('s-ai')"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#888780" stroke-width="1.5"/><path d="M8 11h6M11 8v6" stroke="#888780" stroke-width="1.5" stroke-linecap="round"/></svg><div class="bnav-label">AI</div></div>
+      <div class="bnav" onclick="go('s-fraud')"><svg viewBox="0 0 22 22" fill="none"><path d="M11 3l8 4v5c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7l8-4z" stroke="#888780" stroke-width="1.5" stroke-linejoin="round"/></svg><div class="bnav-label">Security</div></div>
+      <div class="bnav" onclick="go('s-profile')"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7" r="4" stroke="#888780" stroke-width="1.5"/><path d="M3 19c0-4 3.582-7 8-7s8 3 8 7" stroke="#888780" stroke-width="1.5" stroke-linecap="round"/></svg><div class="bnav-label">Profile</div></div>
+    </div>
+  </div>
+
+  <!-- ══ SEND — FULL SCREEN ══ -->
+  <div class="screen" id="s-send">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="send-header">
+      <div class="back-row" onclick="go('s-dashboard')"><div class="back-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="back-label">Back</span></div>
+      <div class="form-title">Payments</div>
+      <div class="form-sub">Transfer, airtime, data &amp; more</div>
+    </div>
+    <div class="send-body">
+
+      <!-- ── TOP CATEGORY TABS ── -->
+      <div class="cat-tabs">
+        <div class="cat-tab active" id="cat-local" onclick="switchCat('local')">🏦 Transfer</div>
+        <div class="cat-tab" id="cat-airtime" onclick="switchCat('airtime')">📞 Airtime</div>
+        <div class="cat-tab" id="cat-data" onclick="switchCat('data')">📶 Data</div>
+      </div>
+      <div style="background:var(--purple-light);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--purple-mid);text-align:center;">
+        🇳🇬 Currently serving Nigeria only · More African countries coming soon
+      </div>
+
+      <!-- ══ LOCAL TRANSFER ══ -->
+      <div id="form-local">
+        <div class="method-pills-row">
+          <div class="send-method-pill active" id="mp-bank" onclick="switchMethod('bank',this)">🏦 Bank</div>
+          <div class="send-method-pill" id="mp-mfb" onclick="switchMethod('mfb',this)">🏘️ Microfinance</div>
+          <div class="send-method-pill" id="mp-phone" onclick="switchMethod('phone',this)">📱 Phone</div>
+          <div class="send-method-pill" id="mp-tag" onclick="switchMethod('tag',this)">🏷️ Tag</div>
+        </div>
+
+        <!-- COMMERCIAL BANKS -->
+        <div id="method-bank">
+          <div class="field-group">
+            <div class="field-label">Search bank</div>
+            <input class="field-input" id="bank-search" placeholder="Type to search bank…" oninput="filterBanks(this.value,'bank-results',commercialBanks)" autocomplete="off" onfocus="showResults('bank-results')">
+            <div id="bank-results" class="bank-dropdown"></div>
+            <div id="bank-selected" class="bank-chosen" style="display:none;"><span id="bank-selected-name"></span><span onclick="clearBank('bank-search','bank-selected')" class="clear-bank">✕</span></div>
+          </div>
+          <div class="field-group"><div class="field-label">Account number</div><input class="field-input" id="acct-num" placeholder="0123456789" type="tel" maxlength="10" oninput="verifyAccount(this)"></div>
+          <div id="acct-verified" class="verified-chip" style="display:none;">✓ Chisom Eze — Account verified</div>
+        </div>
+
+        <!-- MICROFINANCE BANKS -->
+        <div id="method-mfb" style="display:none;">
+          <div class="field-group">
+            <div class="field-label">Search microfinance bank</div>
+            <input class="field-input" id="mfb-search" placeholder="Type to search MFB…" oninput="filterBanks(this.value,'mfb-results',mfbList)" autocomplete="off" onfocus="showResults('mfb-results')">
+            <div id="mfb-results" class="bank-dropdown"></div>
+            <div id="mfb-selected" class="bank-chosen" style="display:none;"><span id="mfb-selected-name"></span><span onclick="clearBank('mfb-search','mfb-selected')" class="clear-bank">✕</span></div>
+          </div>
+          <div class="field-group"><div class="field-label">Account number</div><input class="field-input" placeholder="0123456789" type="tel" maxlength="10" oninput="verifyAccount(this)"></div>
+          <div id="mfb-verified" class="verified-chip" style="display:none;">✓ Account name verified</div>
+        </div>
+
+        <!-- PHONE TRANSFER -->
+        <div id="method-phone" style="display:none;">
+          <div class="field-group"><div class="field-label">Recipient phone number</div><input class="field-input" placeholder="+234 801 234 5678" type="tel"></div>
+          <div class="field-group"><div class="field-label">Network</div>
+            <select class="field-input"><option>Auto-detect</option><option>MTN</option><option>Airtel</option><option>Glo</option><option>9mobile</option></select>
+          </div>
+        </div>
+
+        <!-- ONEPAY TAG -->
+        <div id="method-tag" style="display:none;">
+          <div class="field-group"><div class="field-label">OnePay tag or username</div><input class="field-input" placeholder="@username or OP-NG-00142" type="text"></div>
+        </div>
+
+        <div class="amount-box">
+          <div class="amount-label">Amount (NGN)</div>
+          <div class="amount-display" id="local-amount">₦ 50,000</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <div class="quick-amount" onclick="setAmount('local-amount','₦ 1,000')">₦1K</div>
+            <div class="quick-amount" onclick="setAmount('local-amount','₦ 5,000')">₦5K</div>
+            <div class="quick-amount" onclick="setAmount('local-amount','₦ 10,000')">₦10K</div>
+            <div class="quick-amount" onclick="setAmount('local-amount','₦ 20,000')">₦20K</div>
+            <div class="quick-amount" onclick="setAmount('local-amount','₦ 50,000')">₦50K</div>
+            <div class="quick-amount" onclick="setAmount('local-amount','₦ 100,000')">₦100K</div>
+          </div>
+        </div>
+        <div class="field-group"><div class="field-label">Narration (optional)</div><input class="field-input" placeholder="e.g. Rent, School fees, Business…" type="text"></div>
+        <div class="recv-box">
+          <div class="recv-row"><div class="recv-row-label">Recipient gets</div><div class="recv-row-val highlight">₦ 50,000</div></div>
+          <div class="recv-row"><div class="recv-row-label">Transfer fee</div><div class="recv-row-val" style="color:var(--green);font-weight:600;">Free</div></div>
+          <div class="recv-row"><div class="recv-row-label">Delivery time</div><div class="recv-row-val">Instant</div></div>
+          <div class="recv-divider"></div>
+          <div class="recv-row"><div class="recv-row-label" style="font-weight:600;color:var(--text-dark);">Total</div><div class="recv-row-val" style="font-weight:700;color:var(--text-dark);">₦ 50,000</div></div>
+        </div>
+        <button class="btn-primary" onclick="initiateLocalTransfer()">Confirm &amp; send</button>
+      </div>
+
+      <!-- ══ AFRICAN TRANSFER ══ -->
+      <div id="form-africa" style="display:none;">
+        <div class="field-group"><div class="field-label">Recipient name or phone</div><input class="field-input" placeholder="Name or +country code number" type="text"></div>
+        <div class="field-group"><div class="field-label">Destination country</div>
+          <select class="field-input" onchange="updateRate(this)">
+            <option value="KES">🇰🇪 Kenya (KES)</option><option value="GHS">🇬🇭 Ghana (GHS)</option>
+            <option value="ZAR">🇿🇦 South Africa (ZAR)</option><option value="XOF">🇸🇳 Senegal (XOF)</option>
+            <option value="ETB">🇪🇹 Ethiopia (ETB)</option><option value="XAF">🇨🇲 Cameroon (XAF)</option>
+            <option value="TZS">🇹🇿 Tanzania (TZS)</option><option value="UGX">🇺🇬 Uganda (UGX)</option>
+            <option value="RWF">🇷🇼 Rwanda (RWF)</option><option value="EGP">🇪🇬 Egypt (EGP)</option>
+            <option value="MAD">🇲🇦 Morocco (MAD)</option><option value="TND">🇹🇳 Tunisia (TND)</option>
+            <option value="DZD">🇩🇿 Algeria (DZD)</option><option value="MZN">🇲🇿 Mozambique (MZN)</option>
+            <option value="ZMW">🇿🇲 Zambia (ZMW)</option><option value="BWP">🇧🇼 Botswana (BWP)</option>
+          </select>
+        </div>
+        <div class="amount-box">
+          <div class="amount-label">You send (NGN)</div>
+          <div class="amount-display" id="africa-amount">₦ 45,000</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <div class="quick-amount" onclick="setAmount('africa-amount','₦ 10,000')">₦10K</div>
+            <div class="quick-amount" onclick="setAmount('africa-amount','₦ 25,000')">₦25K</div>
+            <div class="quick-amount" onclick="setAmount('africa-amount','₦ 50,000')">₦50K</div>
+            <div class="quick-amount" onclick="setAmount('africa-amount','₦ 100,000')">₦100K</div>
+          </div>
+        </div>
+        <div class="rate-strip"><div class="rate-left">Exchange rate</div><div class="rate-right" id="rate-display">1 NGN = 0.085 KES</div></div>
+        <div class="recv-box">
+          <div class="recv-row"><div class="recv-row-label">Recipient gets</div><div class="recv-row-val highlight" id="recv-amount">KES 3,825</div></div>
+          <div class="recv-row"><div class="recv-row-label">Transfer fee</div><div class="recv-row-val">₦ 250</div></div>
+          <div class="recv-row"><div class="recv-row-label">Delivery time</div><div class="recv-row-val">Instant – 2 hrs</div></div>
+          <div class="recv-divider"></div>
+          <div class="recv-row"><div class="recv-row-label" style="font-weight:600;color:var(--text-dark);">Total</div><div class="recv-row-val" style="font-weight:700;color:var(--text-dark);">₦ 45,250</div></div>
+        </div>
+        <button class="btn-primary">Confirm &amp; send</button>
+      </div>
+
+      <!-- ══ AIRTIME ══ -->
+      <div id="form-airtime" style="display:none;">
+        <div class="field-group"><div class="field-label">Phone number</div><input class="field-input" id="airtime-phone" placeholder="+234 801 234 5678" type="tel"></div>
+        <div class="field-label" style="margin-bottom:8px;">Select network</div>
+        <div class="network-grid">
+          <div class="network-card active" id="net-mtn" onclick="selectNetwork('mtn')"><div class="net-logo" style="background:#FFC300;color:#1a1a1a;">MTN</div><div class="net-name">MTN</div></div>
+          <div class="network-card" id="net-airtel" onclick="selectNetwork('airtel')"><div class="net-logo" style="background:#E01A22;color:white;">AIR</div><div class="net-name">Airtel</div></div>
+          <div class="network-card" id="net-glo" onclick="selectNetwork('glo')"><div class="net-logo" style="background:#008000;color:white;">GLO</div><div class="net-name">Glo</div></div>
+          <div class="network-card" id="net-9mobile" onclick="selectNetwork('9mobile')"><div class="net-logo" style="background:#006E33;color:white;">9MB</div><div class="net-name">9mobile</div></div>
+        </div>
+        <div class="field-label" style="margin:14px 0 8px;">Select amount</div>
+        <div class="airtime-grid">
+          <div class="airtime-card" onclick="selectAirtime(this,'₦ 50')">₦50</div>
+          <div class="airtime-card" onclick="selectAirtime(this,'₦ 100')">₦100</div>
+          <div class="airtime-card active" onclick="selectAirtime(this,'₦ 200')">₦200</div>
+          <div class="airtime-card" onclick="selectAirtime(this,'₦ 500')">₦500</div>
+          <div class="airtime-card" onclick="selectAirtime(this,'₦ 1,000')">₦1,000</div>
+          <div class="airtime-card" onclick="selectAirtime(this,'₦ 2,000')">₦2,000</div>
+          <div class="airtime-card" onclick="selectAirtime(this,'₦ 3,000')">₦3,000</div>
+          <div class="airtime-card" onclick="selectAirtime(this,'₦ 5,000')">₦5,000</div>
+        </div>
+        <div class="field-group" style="margin-top:12px;"><div class="field-label">Or enter custom amount</div><input class="field-input" placeholder="Enter amount in ₦" type="number" id="airtime-custom"></div>
+        <div class="recv-box">
+          <div class="recv-row"><div class="recv-row-label">Network</div><div class="recv-row-val" id="airtime-network-display">MTN</div></div>
+          <div class="recv-row"><div class="recv-row-label">Phone</div><div class="recv-row-val">Your number</div></div>
+          <div class="recv-row"><div class="recv-row-label">Amount</div><div class="recv-row-val highlight" id="airtime-amount-display">₦ 200</div></div>
+          <div class="recv-row"><div class="recv-row-label">Delivery</div><div class="recv-row-val">Instant</div></div>
+        </div>
+        <button class="btn-primary" onclick="buyAirtime()">Buy airtime now</button>
+      </div>
+
+      <!-- ══ DATA ══ -->
+      <div id="form-data" style="display:none;">
+        <div class="field-group"><div class="field-label">Phone number</div><input class="field-input" placeholder="+234 801 234 5678" type="tel"></div>
+        <div class="field-label" style="margin-bottom:8px;">Select network</div>
+        <div class="network-grid">
+          <div class="network-card active" id="dnet-mtn" onclick="selectDataNetwork('mtn')"><div class="net-logo" style="background:#FFC300;color:#1a1a1a;">MTN</div><div class="net-name">MTN</div></div>
+          <div class="network-card" id="dnet-airtel" onclick="selectDataNetwork('airtel')"><div class="net-logo" style="background:#E01A22;color:white;">AIR</div><div class="net-name">Airtel</div></div>
+          <div class="network-card" id="dnet-glo" onclick="selectDataNetwork('glo')"><div class="net-logo" style="background:#008000;color:white;">GLO</div><div class="net-name">Glo</div></div>
+          <div class="network-card" id="dnet-9mobile" onclick="selectDataNetwork('9mobile')"><div class="net-logo" style="background:#006E33;color:white;">9MB</div><div class="net-name">9mobile</div></div>
+        </div>
+        <div class="field-label" style="margin:14px 0 8px;">Choose data plan</div>
+        <div id="data-plans-mtn" class="data-plans">
+          <div class="data-plan-card active" onclick="selectPlan(this,'100MB','₦ 100','1 day')"><div class="plan-size">100MB</div><div class="plan-price">₦100</div><div class="plan-validity">1 day</div></div>
+          <div class="data-plan-card" onclick="selectPlan(this,'500MB','₦ 300','7 days')"><div class="plan-size">500MB</div><div class="plan-price">₦300</div><div class="plan-validity">7 days</div></div>
+          <div class="data-plan-card" onclick="selectPlan(this,'1GB','₦ 500','30 days')"><div class="plan-size">1GB</div><div class="plan-price">₦500</div><div class="plan-validity">30 days</div></div>
+          <div class="data-plan-card" onclick="selectPlan(this,'2GB','₦ 1,000','30 days')"><div class="plan-size">2GB</div><div class="plan-price">₦1,000</div><div class="plan-validity">30 days</div></div>
+          <div class="data-plan-card" onclick="selectPlan(this,'5GB','₦ 2,000','30 days')"><div class="plan-size">5GB</div><div class="plan-price">₦2,000</div><div class="plan-validity">30 days</div></div>
+          <div class="data-plan-card" onclick="selectPlan(this,'10GB','₦ 3,500','30 days')"><div class="plan-size">10GB</div><div class="plan-price">₦3,500</div><div class="plan-validity">30 days</div></div>
+          <div class="data-plan-card" onclick="selectPlan(this,'20GB','₦ 6,000','30 days')"><div class="plan-size">20GB</div><div class="plan-price">₦6,000</div><div class="plan-validity">30 days</div></div>
+          <div class="data-plan-card" onclick="selectPlan(this,'50GB','₦ 12,000','30 days')"><div class="plan-size">50GB</div><div class="plan-price">₦12,000</div><div class="plan-validity">30 days</div></div>
+        </div>
+        <div class="recv-box" style="margin-top:14px;">
+          <div class="recv-row"><div class="recv-row-label">Network</div><div class="recv-row-val" id="data-network-display">MTN</div></div>
+          <div class="recv-row"><div class="recv-row-label">Plan</div><div class="recv-row-val highlight" id="data-plan-display">100MB · 1 day</div></div>
+          <div class="recv-row"><div class="recv-row-label">Amount</div><div class="recv-row-val" id="data-price-display">₦ 100</div></div>
+          <div class="recv-row"><div class="recv-row-label">Delivery</div><div class="recv-row-val">Instant</div></div>
+        </div>
+        <button class="btn-primary" onclick="buyData()">Buy data now</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ AI ASSISTANT ══ -->
+  <div class="screen" id="s-ai">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="ai-header">
+      <div class="back-row" onclick="go('s-dashboard')" style="margin-bottom:8px;"><div class="back-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="back-label">Back</span></div>
+      <div class="form-title">Spending assistant</div>
+      <div class="ai-badge"><div class="ai-dot"></div><div class="ai-badge-text">AI online · Powered by Claude</div></div>
+    </div>
+    <div class="chat-area" id="chat-messages">
+      <div class="msg-row ai">
+        <div class="msg-av" style="background:var(--purple-mid);color:white;">AI</div>
+        <div>
+          <div class="bubble">Hello Adewale! I'm your OnePay AI assistant. Ask me about your spending, transfers, exchange rates, or anything about your account.</div>
+          <div class="msg-time">9:41 am</div>
+        </div>
+      </div>
+    </div>
+    <div class="chips-row" id="chips-row">
+      <div class="chip" onclick="chipSend(this)">How much did I spend this month?</div>
+      <div class="chip" onclick="chipSend(this)">Best time to send to Kenya?</div>
+      <div class="chip" onclick="chipSend(this)">Explain my last transaction</div>
+      <div class="chip" onclick="chipSend(this)">How do I add a new wallet?</div>
+    </div>
+    <div class="chat-input-bar">
+      <input class="chat-field" id="chat-field" placeholder="Ask me anything…" onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="chat-send" onclick="sendChat()"><svg viewBox="0 0 16 16" fill="none"><path d="M2 8h12M9 3l5 5-5 5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ══ FRAUD ALERTS ══ -->
+  <div class="screen" id="s-fraud">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="send-header">
+      <div class="back-row" onclick="go('s-dashboard')" style="margin-bottom:8px;"><div class="back-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="back-label">Back</span></div>
+      <div class="form-title">Fraud alerts</div>
+      <div class="ai-badge"><div class="ai-dot"></div><div class="ai-badge-text">AI monitoring · 2 alerts today</div></div>
+    </div>
+    <div class="fraud-body">
+      <div class="fraud-stats">
+        <div class="fstat" style="background:var(--green-bg);"><div class="fstat-label" style="color:var(--green);">Safe transactions</div><div class="fstat-val" style="color:var(--green);">21</div></div>
+        <div class="fstat" style="background:var(--red-bg);"><div class="fstat-label" style="color:var(--red);">Flagged</div><div class="fstat-val" style="color:var(--red);">2</div></div>
+      </div>
+      <div class="alert-card danger">
+        <div class="alert-top">
+          <div class="alert-icon" style="background:var(--red-bg);"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2l7 14H2L9 2z" stroke="#A32D2D" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 8v3M9 13v.5" stroke="#A32D2D" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+          <div><div class="alert-title">Unusual transfer detected</div><div class="alert-sub">₦187,000 → South Africa · 2 min ago</div></div>
+        </div>
+        <div class="risk-bar-row"><div class="risk-bar-label">Risk level</div><div class="risk-track"><div class="risk-fill" style="width:78%;background:#E24B4A;"></div></div><div class="risk-pct" style="color:var(--red);">78%</div></div>
+        <div class="alert-body-text" id="fraud-msg">This transfer is 4× larger than your average to South Africa and was initiated at 2:14 am. Your device location also differs from your usual area. OnePay AI recommends reviewing before approving.</div>
+        <div class="alert-actions">
+          <button class="action-btn btn-block">Block it</button>
+          <button class="action-btn btn-ok" onclick="approveFraud()">It's me, approve</button>
+        </div>
+      </div>
+      <div class="alert-card warn">
+        <div class="alert-top">
+          <div class="alert-icon" style="background:var(--gold-light);"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#854F0B" stroke-width="1.4"/><path d="M9 6v4M9 12v.5" stroke="#854F0B" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+          <div><div class="alert-title">New recipient added</div><div class="alert-sub">Moussa Traoré · Mali · 1 hr ago</div></div>
+        </div>
+        <div class="risk-bar-row"><div class="risk-bar-label">Risk level</div><div class="risk-track"><div class="risk-fill" style="width:32%;background:#EF9F27;"></div></div><div class="risk-pct" style="color:#854F0B;">32%</div></div>
+        <div class="alert-body-text">First-time recipient in a new country. Low risk — confirm you know this person before sending large amounts.</div>
+        <div class="alert-actions">
+          <button class="action-btn btn-dismiss">Dismiss</button>
+          <button class="action-btn btn-ok">Confirm</button>
+        </div>
+      </div>
+      <div class="alert-card">
+        <div class="alert-top">
+          <div class="alert-icon" style="background:var(--green-bg);"><svg viewBox="0 0 18 18" fill="none"><path d="M3 9l5 5 7-8" stroke="#3B6D11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><div class="alert-title">All other transactions safe</div><div class="alert-sub">21 transactions verified today</div></div>
+        </div>
+        <div class="alert-body-text">OnePay AI reviewed all your recent activity. No other suspicious patterns detected.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FX ADVISOR ══ -->
+  <div class="screen" id="s-fx">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="send-header">
+      <div class="back-row" onclick="go('s-dashboard')" style="margin-bottom:8px;"><div class="back-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="back-label">Back</span></div>
+      <div class="form-title">FX advisor</div>
+      <div class="ai-badge"><div class="ai-dot"></div><div class="ai-badge-text">Live rates · AI powered</div></div>
+    </div>
+    <div class="fx-body">
+      <div class="route-pills">
+        <div class="route-pill active" onclick="setRoute(this,'NGN → KES','1 NGN = 0.085 KES','+0.3% vs yesterday','#5DCAA5','Send now — rate trending up this week. Best rate in 7 days.')">NGN → KES</div>
+        <div class="route-pill" onclick="setRoute(this,'NGN → GHS','1 NGN = 0.0042 GHS','+0.8% vs yesterday','#5DCAA5','Good time to send — GHS is strengthening.')">NGN → GHS</div>
+        <div class="route-pill" onclick="setRoute(this,'NGN → ZAR','1 NGN = 0.023 ZAR','-0.5% vs yesterday','#F09595','Wait 1-2 days — ZAR is dipping slightly.')">NGN → ZAR</div>
+        <div class="route-pill" onclick="setRoute(this,'NGN → XOF','1 NGN = 0.81 XOF','+0.1% vs yesterday','#5DCAA5','Rate stable — safe to send anytime.')">NGN → XOF</div>
+      </div>
+      <div class="fx-main-card">
+        <div class="fx-route-label" id="fx-route">NGN → KES</div>
+        <div class="fx-rate-big" id="fx-rate">1 NGN = 0.085 KES</div>
+        <div class="fx-change" id="fx-change" style="color:#5DCAA5;">+0.3% vs yesterday</div>
+        <div class="fx-bars">
+          <div class="fx-bar" style="height:55%;"></div><div class="fx-bar" style="height:62%;"></div><div class="fx-bar" style="height:50%;"></div>
+          <div class="fx-bar" style="height:70%;"></div><div class="fx-bar" style="height:66%;"></div><div class="fx-bar" style="height:80%;"></div>
+          <div class="fx-bar best" style="height:100%;"></div>
+        </div>
+        <div class="fx-day-labels">
+          <div class="fx-day-label">Mon</div><div class="fx-day-label">Tue</div><div class="fx-day-label">Wed</div>
+          <div class="fx-day-label">Thu</div><div class="fx-day-label">Fri</div><div class="fx-day-label">Sat</div>
+          <div class="fx-day-label today">Now</div>
+        </div>
+        <div class="fx-advice-box">
+          <div class="fx-advice-label">AI recommendation</div>
+          <div class="fx-advice-text" id="fx-advice">Send now — rate trending up this week. Best rate in 7 days. Waiting longer may cost you more.</div>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon" style="background:var(--purple-light);"><svg viewBox="0 0 18 18" fill="none"><path d="M2 13l5-5 3 3 6-7" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div><div class="insight-title">You saved ₦12,400 this month</div><div class="insight-text">By following OnePay AI rate alerts, you sent at better times than average on 4 out of 5 transfers.</div></div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon" style="background:var(--gold-light);"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#854F0B" stroke-width="1.4"/><path d="M9 5.5v4l2.5 2.5" stroke="#854F0B" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+        <div><div class="insight-title">Rate alert set for ZAR</div><div class="insight-text">We will notify you when NGN → ZAR hits your target rate of 0.025. Current: 0.023.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PROFILE ══ -->
+  <div class="screen" id="s-profile">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+    <div class="prof-header">
+      <div class="prof-avatar" id="prof-avatar-text">OP</div>
+      <div class="prof-name" id="prof-full-name">OnePay User</div>
+      <div class="prof-id" id="prof-uid">ID: OP-NG-00001 · Nigeria</div>
+      <div class="kyc-chip"><div class="kyc-dot"></div><div class="kyc-label">KYC Verified · Tier 2</div></div>
+    </div>
+    <div class="prof-body">
+      <div class="section-title">My wallet</div>
+      <div class="wallet-grid">
+        <div class="wallet-card"><div class="wallet-flag">🇳🇬</div><div class="wallet-currency">Nigerian Naira</div><div class="wallet-balance" id="prof-wallet-balance">₦ 0</div></div>
+        <div class="wallet-add"><div class="wallet-add-icon">🌍</div><div class="wallet-add-text">More countries soon</div></div>
+      </div>
+      <div class="section-title">Account settings</div>
+      <div class="menu-items">
+        <div class="menu-item"><div class="menu-icon" style="background:var(--purple-light);"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="#534AB7" stroke-width="1.4"/><path d="M2 16c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#534AB7" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="menu-info"><div class="menu-title">Personal information</div><div class="menu-sub">Name, email, phone number</div></div><div class="menu-arrow"><svg viewBox="0 0 14 14" fill="none"><path d="M5 3l5 4-5 4" stroke="#888" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+        <div class="menu-item"><div class="menu-icon" style="background:var(--green-bg);"><svg viewBox="0 0 18 18" fill="none"><rect x="4" y="8" width="10" height="8" rx="2" stroke="#3B6D11" stroke-width="1.4"/><path d="M6 8V6a3 3 0 0 1 6 0v2" stroke="#3B6D11" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="menu-info"><div class="menu-title">Security &amp; PIN</div><div class="menu-sub">Change PIN, biometrics, 2FA</div></div><div class="menu-arrow"><svg viewBox="0 0 14 14" fill="none"><path d="M5 3l5 4-5 4" stroke="#888" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+        <div class="menu-item"><div class="menu-icon" style="background:var(--gold-light);"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2l7 4v5c0 4-3 6.5-7 7-4-.5-7-3-7-7V6l7-4z" stroke="#854F0B" stroke-width="1.4" stroke-linejoin="round"/></svg></div><div class="menu-info"><div class="menu-title">KYC verification</div><div class="menu-sub">Verified · Tier 2 account</div></div><div class="menu-arrow"><svg viewBox="0 0 14 14" fill="none"><path d="M5 3l5 4-5 4" stroke="#888" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+        <div class="menu-item"><div class="menu-icon" style="background:var(--teal-bg);"><svg viewBox="0 0 18 18" fill="none"><rect x="2" y="5" width="14" height="10" rx="2" stroke="#0F6E56" stroke-width="1.4"/><path d="M2 9h14" stroke="#0F6E56" stroke-width="1.4"/><circle cx="6" cy="12.5" r="1.2" fill="#0F6E56"/></svg></div><div class="menu-info"><div class="menu-title">Linked bank accounts</div><div class="menu-sub">GTBank · Access Bank</div></div><div class="menu-arrow"><svg viewBox="0 0 14 14" fill="none"><path d="M5 3l5 4-5 4" stroke="#888" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+        <div class="menu-item" style="opacity:0.6;"><div class="menu-icon" style="background:var(--purple-light);"><svg viewBox="0 0 18 18" fill="none"><path d="M2 13l5-5 3 3 6-7" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-info"><div class="menu-title">African transfers</div><div class="menu-sub">Coming soon — Nigeria first 🇳🇬</div></div></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+    <div class="bottom-nav">
+      <div class="bnav" onclick="go('s-dashboard')"><svg viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#888780" stroke-width="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#888780" stroke-width="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="#888780" stroke-width="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5" stroke="#888780" stroke-width="1.5"/></svg><div class="bnav-label">Home</div></div>
+      <div class="bnav" onclick="go('s-send')"><svg viewBox="0 0 22 22" fill="none"><path d="M3 11h16M14 5l6 6-6 6" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="bnav-label">Send</div></div>
+      <div class="bnav" onclick="go('s-ai')"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#888780" stroke-width="1.5"/><path d="M8 11h6M11 8v6" stroke="#888780" stroke-width="1.5" stroke-linecap="round"/></svg><div class="bnav-label">AI</div></div>
+      <div class="bnav" onclick="go('s-fraud')"><svg viewBox="0 0 22 22" fill="none"><path d="M11 3l8 4v5c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7l8-4z" stroke="#888780" stroke-width="1.5" stroke-linejoin="round"/></svg><div class="bnav-label">Security</div></div>
+      <div class="bnav active" onclick="go('s-profile')"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7" r="4" stroke="#534AB7" stroke-width="1.5"/><path d="M3 19c0-4 3.582-7 8-7s8 3 8 7" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round"/></svg><div class="bnav-label" style="color:var(--purple-mid);">Profile</div><div class="bnav-dot"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── BANK DATA ──
+const commercialBanks = [
+  'Access Bank','Citibank Nigeria','Ecobank Nigeria','Fidelity Bank',
+  'First Bank of Nigeria','First City Monument Bank (FCMB)','Globus Bank',
+  'Guaranty Trust Bank (GTBank)','Heritage Bank','Keystone Bank',
+  'Optimus Bank','Parallex Bank','Polaris Bank','Premium Trust Bank',
+  'Providus Bank','Stanbic IBTC Bank','Standard Chartered Bank',
+  'Sterling Bank','SunTrust Bank','Titan Trust Bank','Union Bank of Nigeria',
+  'United Bank for Africa (UBA)','Unity Bank','Wema Bank','Zenith Bank',
+  'Kuda Bank','Opay','Moniepoint','PalmPay','VFD Microfinance Bank',
+  'Carbon (One Finance)','Fairmoney','Raven Bank'
+];
+
+const mfbList = [
+  // CBN-licensed microfinance banks
+  'AB Microfinance Bank','ACCION Microfinance Bank','Addosser Microfinance Bank',
+  'Alheri Microfinance Bank','Al-Hayat Microfinance Bank','Amju Unique Microfinance Bank',
+  'Arise Microfinance Bank','Assetrust Microfinance Bank',
+  'Baines Credit Microfinance Bank','Baobab Microfinance Bank',
+  'BC Kash Microfinance Bank','Bosak Microfinance Bank',
+  'Brent Microfinance Bank','CEMCS Microfinance Bank',
+  'Chanelle Microfinance Bank','Chikum Microfinance Bank',
+  'Consumer Microfinance Bank','Contec Global Infotech (Nownow)',
+  'Credit Afrique Microfinance Bank','Diobu Microfinance Bank',
+  'Dot Microfinance Bank','Ekondo Microfinance Bank',
+  'Empire Trust Microfinance Bank','Enrich Microfinance Bank',
+  'Eso-E Microfinance Bank','Evangel Microfinance Bank',
+  'Eyowo Microfinance Bank','FairMoney Microfinance Bank',
+  'Fast Microfinance Bank','Fets Microfinance Bank',
+  'Financial Trust Microfinance Bank','Firmus Microfinance Bank',
+  'First Option Microfinance Bank','First Royal Microfinance Bank',
+  'Flutterwave Microfinance Bank','Fortis Microfinance Bank',
+  'Fullrange Microfinance Bank','FundQuest Microfinance Bank',
+  'Gateway Mortgage Bank','Gomoney Microfinance Bank',
+  'Good Shepherd Microfinance Bank','Green Energy Microfinance Bank',
+  'Greenwich Merchant Bank','Grooming Microfinance Bank',
+  'Hackman Microfinance Bank','Hasal Microfinance Bank',
+  'Hope Payment Service Bank','IBILE Microfinance Bank',
+  'Infinity Microfinance Bank','Infinity Trust Mortgage Bank',
+  'Inland Microfinance Bank','Ivy Microfinance Bank',
+  'Jigawa Microfinance Bank','KEGOW Microfinance Bank',
+  'Kolomoni Microfinance Bank','Kongapay Technologies',
+  'Kredi Money Microfinance Bank','Lapo Microfinance Bank',
+  'Letshego Microfinance Bank','Links Microfinance Bank',
+  'Living Trust Mortgage Bank','Lovonus Microfinance Bank',
+  'Manny Microfinance Bank','Maritime Microfinance Bank',
+  'Mayfair Microfinance Bank','Megapraise Microfinance Bank',
+  'Microcred Microfinance Bank','MiDA Microfinance Bank',
+  'Mint Finex Microfinance Bank','Moniepoint Microfinance Bank',
+  'MoniMoney Microfinance Bank','Mortgageline Microfinance Bank',
+  'Mutual Trust Microfinance Bank','Nagarta Microfinance Bank',
+  'New Dawn Microfinance Bank','NewEdge Finance',
+  'Newpak Microfinance Bank','Nigerian Mortgage Refinance Company',
+  'NIRSAL Microfinance Bank','NPF Microfinance Bank',
+  'Ohafia Microfinance Bank','Okpoga Microfinance Bank',
+  'Olabisi Onabanjo University Microfinance Bank',
+  'Omoluabi Mortgage Bank','One Finance (Carbon)',
+  'Opay Digital Services','Optima Microfinance Bank',
+  'Oracle Microfinance Bank','Page Microfinance Bank',
+  'Paradigm Microfinance Bank','Parallex Microfinance Bank',
+  'Parkway Microfinance Bank','Peace Microfinance Bank',
+  'Pearl Microfinance Bank','Pennywise Microfinance Bank',
+  'Petra Microfinance Bank','Pillar Microfinance Bank',
+  'Pipeline Infrastructure','Platinum Microfinance Bank',
+  'Polyunwana Microfinance Bank','Prestige Microfinance Bank',
+  'Princeton Trust Microfinance Bank','Progress Microfinance Bank',
+  'Rano Microfinance Bank','Regent Microfinance Bank',
+  'Reliance Microfinance Bank','Rephidim Microfinance Bank',
+  'Richway Microfinance Bank','Royal Microfinance Bank',
+  'Rubies Bank (Highstreet Microfinance Bank)',
+  'Safe Haven Microfinance Bank','Sagamu Microfinance Bank',
+  'Seed Capital Microfinance Bank','Shamas Microfinance Bank',
+  'Shepherd Trust Microfinance Bank','Shield Microfinance Bank',
+  'Shongom Microfinance Bank','Sijzeal Microfinance Bank',
+  'Silverland Microfinance Bank','Smartcash Payment Service Bank',
+  'Solid Rock Microfinance Bank','Sparkle Microfinance Bank',
+  'Spectrum Microfinance Bank','Splash Mobile Money',
+  'SunFlag Microfinance Bank','Susu Microfinance Bank',
+  'Tangerine Money (formerly 9PSB)','TCF Microfinance Bank',
+  'Trident Microfinance Bank','Trust Microfinance Bank',
+  'Trustfund Microfinance Bank','Unilag Microfinance Bank',
+  'Unimaid Microfinance Bank','Unizon Microfinance Bank',
+  'Urgent Cash Microfinance Bank','VFD Microfinance Bank',
+  'Virtue Microfinance Bank','Vision Fund Microfinance Bank',
+  'Wetland Microfinance Bank','Xpress Payments',
+  'Yes Microfinance Bank','Yobe Microfinance Bank',
+  'Zikra Microfinance Bank','Zion Microfinance Bank'
+];
+
+function filterBanks(query, resultsId, list) {
+  const el = document.getElementById(resultsId);
+  if (!query.trim()) { el.style.display = 'none'; return; }
+  const filtered = list.filter(b => b.toLowerCase().includes(query.toLowerCase())).slice(0,10);
+  if (!filtered.length) { el.innerHTML = '<div class="bank-option">No results found</div>'; el.style.display='block'; return; }
+  el.innerHTML = filtered.map(b => `<div class="bank-option" onclick="selectBank('${b}','${resultsId}')">${b}</div>`).join('');
+  el.style.display = 'block';
+}
+
+function showResults(id) {
+  // only show if there's a query
+  const inp = document.getElementById(id === 'bank-results' ? 'bank-search' : 'mfb-search');
+  if (inp && inp.value.trim()) document.getElementById(id).style.display = 'block';
+}
+
+function selectBank(name, resultsId) {
+  const isBank = resultsId === 'bank-results';
+  const searchId = isBank ? 'bank-search' : 'mfb-search';
+  const selectedId = isBank ? 'bank-selected' : 'mfb-selected';
+  const nameId = isBank ? 'bank-selected-name' : 'mfb-selected-name';
+  document.getElementById(searchId).value = '';
+  document.getElementById(resultsId).style.display = 'none';
+  document.getElementById(nameId).textContent = name;
+  document.getElementById(selectedId).style.display = 'flex';
+}
+
+function clearBank(searchId, selectedId) {
+  document.getElementById(searchId).value = '';
+  document.getElementById(selectedId).style.display = 'none';
+}
+
+// ── CAT SWITCHING ──
+function switchCat(cat) {
+  ['local','airtime','data'].forEach(c => {
+    const tab = document.getElementById('cat-'+c);
+    const form = document.getElementById('form-'+c);
+    if (tab) tab.classList.toggle('active', c===cat);
+    if (form) form.style.display = c===cat ? 'block' : 'none';
+  });
+}
+
+// ── LOCAL METHOD SWITCHING ──
+function switchMethod(method, el) {
+  document.querySelectorAll('.send-method-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  ['bank','mfb','phone','tag'].forEach(m => {
+    const el = document.getElementById('method-'+m);
+    if (el) el.style.display = m===method ? 'block' : 'none';
+  });
+}
+
+function verifyAccount(input) {
+  const v = document.getElementById('acct-verified') || document.getElementById('mfb-verified');
+  if (v) v.style.display = input.value.length === 10 ? 'block' : 'none';
+}
+
+function setAmount(elId, amount) { document.getElementById(elId).textContent = amount; }
+
+// ── AIRTIME ──
+let selectedAirtimeNetwork = 'MTN';
+function selectNetwork(net) {
+  ['mtn','airtel','glo','9mobile'].forEach(n => document.getElementById('net-'+n).classList.toggle('active', n===net));
+  selectedAirtimeNetwork = net.toUpperCase();
+  document.getElementById('airtime-network-display').textContent = selectedAirtimeNetwork;
+}
+function selectAirtime(el, amount) {
+  document.querySelectorAll('.airtime-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('airtime-amount-display').textContent = amount;
+}
+
+// ── DATA ──
+let selectedDataNetwork = 'MTN';
+function selectDataNetwork(net) {
+  ['mtn','airtel','glo','9mobile'].forEach(n => document.getElementById('dnet-'+n).classList.toggle('active', n===net));
+  selectedDataNetwork = net.toUpperCase();
+  document.getElementById('data-network-display').textContent = selectedDataNetwork;
+}
+function selectPlan(el, size, price, validity) {
+  document.querySelectorAll('.data-plan-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('data-plan-display').textContent = size + ' · ' + validity;
+  document.getElementById('data-price-display').textContent = price;
+}
+
+// ── FX RATES ──
+const rates = { KES:'0.085',GHS:'0.0042',ZAR:'0.023',XOF:'0.81',ETB:'0.14',XAF:'0.81',TZS:'3.2',UGX:'4.5',RWF:'0.12',EGP:'0.063',MAD:'0.013',TND:'0.004',DZD:'0.18',MZN:'0.085',ZMW:'0.028',BWP:'0.018' };
+const recvMap = { KES:'KES 3,825',GHS:'GHS 210',ZAR:'ZAR 1,035',XOF:'XOF 36,450',ETB:'ETB 6,300',XAF:'XAF 36,450',TZS:'TZS 144,000',UGX:'UGX 202,500',RWF:'RWF 5,400',EGP:'EGP 2,835',MAD:'MAD 585',TND:'MAD 180',DZD:'DZD 8,100',MZN:'MZN 3,825',ZMW:'ZMW 1,260',BWP:'BWP 810' };
+function updateRate(sel) {
+  const cur = sel.value;
+  document.getElementById('rate-display').textContent = '1 NGN = '+(rates[cur]||'—')+' '+cur;
+  document.getElementById('recv-amount').textContent = recvMap[cur]||cur+' —';
+}
+
+// close dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#bank-search') && !e.target.closest('#bank-results')) document.getElementById('bank-results') && (document.getElementById('bank-results').style.display='none');
+  if (!e.target.closest('#mfb-search') && !e.target.closest('#mfb-results')) document.getElementById('mfb-results') && (document.getElementById('mfb-results').style.display='none');
+});
+
+function approveFraud() {
+  const msg = document.getElementById('fraud-msg');
+  msg.textContent = 'Transaction approved by you. OnePay AI has logged this as a verified transfer and updated your profile.';
+  msg.style.color = 'var(--green)';
+  event.target.textContent = 'Approved';
+  event.target.disabled = true;
+}
+
+function setRoute(el, route, rate, change, color, advice) {
+  document.querySelectorAll('.route-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('fx-route').textContent = route;
+  document.getElementById('fx-rate').textContent = rate;
+  const ch = document.getElementById('fx-change');
+  ch.textContent = change; ch.style.color = color;
+  document.getElementById('fx-advice').textContent = advice;
+}
+
+const chatLog = [];
+
+async function sendChat() {
+  const field = document.getElementById('chat-field');
+  const text = field.value.trim();
+  if (!text) return;
+  field.value = '';
+  document.getElementById('chips-row').style.display = 'none';
+  addBubble('user', text);
+  chatLog.push({ role: 'user', content: text });
+  const typing = addTyping();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are the OnePay AI assistant — a friendly financial assistant for a Nigerian digital payments app (with pan-African expansion planned for the future). The user is a OnePay customer in Nigeria.
+Account info will be provided dynamically based on the logged-in user's real data. OnePay currently supports: local bank transfers (all Nigerian commercial banks and microfinance banks), airtime top-up (MTN, Airtel, Glo, 9mobile), and data bundle purchases. African cross-border transfers are coming in a future update — if asked, let the user know this is planned but not live yet.
+Keep replies short (2-4 sentences), warm, practical and Africa-focused. Use ₦ for Naira.`,
+        messages: chatLog
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.map(b => b.text||'').join('') || 'Unable to connect right now. Please try again.';
+    typing.remove();
+    chatLog.push({ role: 'assistant', content: reply });
+    addBubble('ai', reply);
+  } catch(e) {
+    typing.remove();
+    addBubble('ai', 'Having trouble connecting. Please check your internet and try again.');
+  }
+}
+
+function chipSend(el) {
+  document.getElementById('chat-field').value = el.textContent;
+  sendChat();
+}
+
+function addBubble(role, text) {
+  const area = document.getElementById('chat-messages');
+  const now = new Date();
+  const t = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+(now.getHours()>=12?' pm':' am');
+  const row = document.createElement('div');
+  row.className = 'msg-row '+role;
+  row.innerHTML = `<div class="msg-av" style="background:${role==='ai'?'var(--purple-mid);color:white':'var(--gold);color:var(--purple-dark)'};">${role==='ai'?'AI':'AO'}</div><div><div class="bubble">${text}</div><div class="msg-time">${t}</div></div>`;
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addTyping() {
+  const area = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row ai';
+  row.innerHTML = `<div class="msg-av" style="background:var(--purple-mid);color:white;">AI</div><div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+  return row;
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBGSPnBkUd6nioTpgvJB0988leLQ9e3UIs",
+  authDomain: "onepay-b37ae.firebaseapp.com",
+  projectId: "onepay-b37ae",
+  storageBucket: "onepay-b37ae.firebasestorage.app",
+  messagingSenderId: "69365315474",
+  appId: "1:69365315474:web:3c60e192b49c554738f34b"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+window._auth = auth;
+window._db = db;
+window._fbFns = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp };
+
+// ── AUTH STATE ──
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    window._currentUser = user;
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        window._userProfile = snap.data();
+        applyProfile(snap.data());
+        loadTransactions(user.uid);
+      }
+    } catch(e) { console.warn(e); }
+    // Only auto-navigate if user is sitting on splash or login
+    const onAuthScreen = document.getElementById('s-splash')?.classList.contains('active')
+      || document.getElementById('s-login')?.classList.contains('active');
+    if (onAuthScreen) go('s-dashboard');
+  } else {
+    window._currentUser = null;
+    // If somehow on dashboard without login, push back to splash
+    const onProtected = document.getElementById('s-dashboard')?.classList.contains('active');
+    if (onProtected) go('s-splash');
+  }
+});
+
+function applyProfile(p) {
+  const initials = (p.fullName||'U').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const el = id => document.getElementById(id);
+  if(el('dash-name')) el('dash-name').textContent = p.fullName || 'User';
+  if(el('prof-avatar-text')) el('prof-avatar-text').textContent = initials;
+  if(el('prof-full-name')) el('prof-full-name').textContent = p.fullName || '';
+  if(el('prof-uid')) el('prof-uid').textContent = 'ID: OP-NG-' + (p.uid||'').slice(0,5).toUpperCase() + ' · ' + (p.country||'Nigeria');
+  if(el('ai-chat-messages')) {
+    // update AI context
+    window._aiUserContext = `User: ${p.fullName}, Country: ${p.country||'Nigeria'}, Currency: ${p.currency||'NGN'}, Email: ${p.email}`;
+  }
+}
+
+async function loadTransactions(uid) {
+  try {
+    const txRef = collection(db, 'users', uid, 'transactions');
+    const q = query(txRef, orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    const txns = [];
+    snap.forEach(d => txns.push({id: d.id, ...d.data()}));
+    window._userTxns = txns;
+    renderTransactions(txns);
+  } catch(e) { console.warn('Txn load:', e); }
+}
+
+function renderTransactions(txns) {
+  const list = document.getElementById('txn-list-live');
+  if (!list || !txns.length) return;
+  list.innerHTML = txns.slice(0,6).map(t => {
+    const isOut = t.type === 'debit';
+    const initials = (t.recipientName||'??').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const colors = ['#EEEDFE;color:#534AB7','#EAF3DE;color:#3B6D11','#FAEEDA;color:#854F0B','#E1F5EE;color:#0F6E56'];
+    const clr = colors[Math.floor(Math.random()*colors.length)];
+    const date = t.createdAt?.toDate ? new Date(t.createdAt.toDate()).toLocaleDateString('en-NG',{month:'short',day:'numeric'}) : 'Recent';
+    return `<div class="txn-card">
+      <div class="txn-avatar" style="background:${clr};">${initials}</div>
+      <div class="txn-info"><div class="txn-name">${t.recipientName||'Transfer'}</div><div class="txn-detail">${t.description||''}</div><div class="status-pill pill-ok">Delivered</div></div>
+      <div class="txn-right"><div class="txn-amount ${isOut?'out':'in'}">${isOut?'-':'+'}₦${Number(t.amount||0).toLocaleString()}</div><div class="txn-time">${date}</div></div>
+    </div>`;
+  }).join('');
+}
+window._loadTransactions = loadTransactions;
+window._renderTransactions = renderTransactions;
+
+// ── SIGNUP ──
+window.doSignup = async function() {
+  const fullName = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const phone = document.getElementById('su-phone').value.trim();
+  const country = document.getElementById('su-country').value;
+  const currency = document.getElementById('su-currency').value;
+  const password = document.getElementById('su-password').value;
+  const errEl = document.getElementById('signup-error');
+
+  if (!fullName || !email || !phone || !password) {
+    errEl.style.display='block'; errEl.textContent='Please fill in all fields.'; return;
+  }
+  if (password.length < 6) {
+    errEl.style.display='block'; errEl.textContent='Password must be at least 6 characters.'; return;
+  }
+
+  const btn = document.getElementById('signup-btn');
+  btn.textContent = 'Creating account…'; btn.disabled = true;
+
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = cred.user.uid;
+    const profile = { uid, fullName, email, phone, country, currency, balance: 0, createdAt: serverTimestamp() };
+    await setDoc(doc(db, 'users', uid), profile);
+    window._userProfile = profile;
+    applyProfile(profile);
+    errEl.style.display='none';
+    showToast('Account created! Welcome to OnePay 🎉');
+    go('s-dashboard');
+  } catch(e) {
+    errEl.style.display='block';
+    errEl.textContent = e.code === 'auth/email-already-in-use' ? 'Email already registered. Please login.' : e.message;
+    btn.textContent = 'Create my account'; btn.disabled = false;
+  }
+};
+
+// ── LOGIN ──
+window.doLogin = async function() {
+  const email = document.getElementById('li-email').value.trim();
+  const password = document.getElementById('li-password').value;
+  const errEl = document.getElementById('login-error');
+
+  if (!email || !password) {
+    errEl.style.display='block'; errEl.textContent='Please enter email and password.'; return;
+  }
+
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    errEl.style.display='none';
+    showToast('Welcome back! 👋');
+    go('s-dashboard');
+  } catch(e) {
+    errEl.style.display='block';
+    errEl.textContent = 'Invalid email or password. Please try again.';
+    btn.textContent = 'Sign in'; btn.disabled = false;
+  }
+};
+
+// ── LOGOUT ──
+window.doLogout = async function() {
+  await signOut(auth);
+  window._currentUser = null;
+  window._userProfile = null;
+  showToast('Signed out successfully.');
+  go('s-splash');
+};
+
+// ── FLUTTERWAVE PAYMENT (SECURE — via backend) ──
+window.payWithFlutterwave = async function(amount, description, recipientName, onSuccess) {
+  const user = window._userProfile || {};
+
+  if (!user.email) {
+    showToast('Please complete your profile before making payments.', 'error');
+    return;
+  }
+
+  showToast('Connecting to secure payment gateway…');
+
+  try {
+    const txRef = 'OP-' + Date.now();
+
+    // Step 1: Ask our secure backend to create the payment (uses SECRET key safely on server)
+    const initRes = await fetch('/api/initiate-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: amount,
+        email: user.email,
+        phone: user.phone || '',
+        name: user.fullName || 'OnePay User',
+        description: description,
+        txRef: txRef
+      })
+    });
+
+    const initData = await initRes.json();
+
+    if (initData.status !== 'success' || !initData.paymentLink) {
+      showToast(initData.message || 'Could not start payment. Please try again.', 'error');
+      return;
+    }
+
+    // Store pending transaction details locally so we can save it after redirect-back
+    sessionStorage.setItem('onepay_pending_tx', JSON.stringify({
+      amount, description, recipientName, txRef
+    }));
+
+    // Step 2: Redirect user to Flutterwave's secure hosted payment page
+    window.location.href = initData.paymentLink;
+
+  } catch (error) {
+    console.error(error);
+    showToast('Connection error. Please check your internet and try again.', 'error');
+  }
+};
+
+// ── HANDLE RETURN FROM FLUTTERWAVE (runs on page load) ──
+window.checkPendingPayment = async function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const transactionId = urlParams.get('transaction_id');
+  const txStatus = urlParams.get('status');
+
+  if (!transactionId) return;
+
+  const pending = JSON.parse(sessionStorage.getItem('onepay_pending_tx') || 'null');
+
+  if (txStatus === 'cancelled') {
+    showToast('Payment was cancelled.', 'error');
+    sessionStorage.removeItem('onepay_pending_tx');
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+
+  showToast('Verifying your payment…');
+
+  try {
+    // Step 3: Verify the payment really succeeded — server-side, using SECRET key
+    const verifyRes = await fetch(`/api/verify-payment?transaction_id=${transactionId}`);
+    const verifyData = await verifyRes.json();
+
+    if (verifyData.status === 'success') {
+      // Save transaction to Firestore now that it's verified
+      if (window._currentUser && pending) {
+        const { collection, addDoc, serverTimestamp } = window._fbFns;
+        await addDoc(collection(window._db, 'users', window._currentUser.uid, 'transactions'), {
+          type: 'debit',
+          amount: pending.amount,
+          recipientName: pending.recipientName,
+          description: pending.description,
+          txRef: verifyData.txRef,
+          flwRef: verifyData.flwRef,
+          status: 'successful',
+          createdAt: serverTimestamp()
+        });
+        await window._loadTransactions(window._currentUser.uid);
+      }
+      showToast('Payment successful! ✅');
+      go('s-dashboard');
+    } else {
+      showToast('Payment could not be confirmed. Contact support if you were charged.', 'error');
+    }
+  } catch (error) {
+    console.error(error);
+    showToast('Could not verify payment. Please check your transaction history.', 'error');
+  } finally {
+    sessionStorage.removeItem('onepay_pending_tx');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+};
+
+// ── SAVE TRANSACTION (for non-flutterwave flows) ──
+window.saveTransaction = async function(data) {
+  if (!window._currentUser) return;
+  try {
+    const { collection, addDoc, serverTimestamp } = window._fbFns;
+    await addDoc(collection(window._db, 'users', window._currentUser.uid, 'transactions'), {
+      ...data, createdAt: serverTimestamp()
+    });
+    await window._loadTransactions(window._currentUser.uid);
+  } catch(e) { console.warn('Save txn error:', e); }
+};
+
+</script>
+
+
+
+</body>
+</html>
