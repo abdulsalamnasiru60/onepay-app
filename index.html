@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OnePay</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:rgba(83,74,183,0.2)}
+:root{
+  --p:#26215C;--pm:#534AB7;--pl:#EEEDFE;--pb:#CECBF6;
+  --g:#EF9F27;--gl:#FAEEDA;--bg:#F4F2FF;--w:#fff;
+  --td:#26215C;--tm:#534AB7;--ts:#888780;
+  --gr:#3B6D11;--grb:#EAF3DE;--r:#A32D2D;--rb:#FCEBEB;
+  --font:'Sora',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:#000;font-family:var(--font)}
+#app{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;height:100%;height:100dvh;
+  background:var(--bg);display:flex;flex-direction:column;overflow:hidden;
+}
+/* SCREENS */
+.sc{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;background:var(--bg)}
+.sc.on{display:flex}
+/* STATUS */
+.sb{background:var(--p);padding:12px 20px 6px;display:flex;justify-content:space-between}
+.sb span{font-size:11px;color:#9985cc}
+/* HEADER */
+.hdr{background:var(--p);padding:14px 20px 18px;flex-shrink:0}
+.hdr-back{display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer}
+.hdr-back-btn{width:30px;height:30px;border-radius:50%;background:#3C3489;display:flex;align-items:center;justify-content:center}
+.hdr-back-lbl{font-size:12px;color:#9985cc}
+.hdr-title{font-size:20px;font-weight:600;color:#fff;margin-bottom:3px}
+.hdr-sub{font-size:12px;color:#9985cc}
+/* SCROLLABLE BODY */
+.body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:16px}
+/* BOTTOM NAV */
+.bnav{flex-shrink:0;background:#fff;border-top:1px solid var(--pb);display:flex}
+.bni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 14px;cursor:pointer;border:none;background:none}
+.bni svg{width:22px;height:22px;stroke:#888;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.bni span{font-size:9px;color:#888;font-weight:500;font-family:var(--font)}
+.bni.on svg{stroke:var(--pm)}
+.bni.on span{color:var(--pm)}
+.bni-dot{width:4px;height:4px;border-radius:50%;background:var(--g);margin:0 auto;margin-top:-2px}
+/* BUTTONS */
+.btn{width:100%;padding:15px;border-radius:14px;border:none;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn:active{opacity:.85}
+.btn-gold{background:var(--g);color:var(--p)}
+.btn-purple{background:var(--pm);color:#fff}
+.btn-outline{background:transparent;color:#CECBF6;border:1px solid #3C3489}
+.btn-red{background:var(--rb);color:var(--r);border:1px solid #F09595}
+/* FORM */
+.fgrp{margin-bottom:14px}
+.flbl{font-size:11px;font-weight:600;color:var(--pm);margin-bottom:5px;letter-spacing:.03em}
+.finp{width:100%;background:#fff;border:1.5px solid var(--pb);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--td);font-family:var(--font);outline:none;transition:border-color .2s}
+.finp:focus{border-color:var(--pm)}
+.finp::placeholder{color:#C5C0E8}
+select.finp{appearance:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* CARDS */
+.card{background:#fff;border:1px solid var(--pb);border-radius:14px;padding:14px}
+.card+.card{margin-top:10px}
+/* ERROR / SUCCESS */
+.err{background:var(--rb);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--r);font-weight:500;margin-bottom:12px;display:none}
+.ok{background:var(--grb);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--gr);font-weight:500;margin-bottom:12px;display:none}
+/* TOAST */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--p);color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:500;z-index:9999;max-width:320px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.35);font-family:var(--font);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err-t{background:var(--r)}
+/* SPLASH */
+#s-splash{background:var(--p);align-items:center;justify-content:center;padding:2rem 2rem 3rem;text-align:center}
+.spl-logo{width:80px;height:80px;border-radius:22px;background:var(--pm);border:2.5px solid var(--g);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.spl-logo svg{width:44px;height:44px}
+.spl-name{font-size:38px;font-weight:700;color:var(--g);letter-spacing:-1.5px;margin-bottom:6px}
+.spl-tag{font-size:14px;color:#AFA9EC;line-height:1.6;margin-bottom:60px;max-width:260px}
+.spl-ftr{margin-top:24px;font-size:11px;color:#534AB7}
+/* DASHBOARD */
+.dash-hdr{background:var(--p);padding:14px 20px 18px;flex-shrink:0}
+.dash-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.dash-greet{font-size:11px;color:#AFA9EC;margin-bottom:2px}
+.dash-name{font-size:17px;font-weight:600;color:#fff}
+.notif{width:36px;height:36px;border-radius:50%;background:#3C3489;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--g);position:absolute;top:5px;right:5px;border:2px solid var(--p)}
+.bal-card{background:var(--pm);border-radius:18px;padding:18px;border:1px solid #6B62C8}
+.bal-lbl{font-size:11px;color:#AFA9EC;margin-bottom:4px}
+.bal-amt{font-size:30px;font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:2px}
+.bal-cur{font-size:12px;color:var(--g);margin-bottom:14px}
+.bal-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bstat{background:rgba(0,0,0,.2);border-radius:12px;padding:10px 12px}
+.bstat-lbl{font-size:10px;color:#AFA9EC;margin-bottom:3px}
+.bstat-val{font-size:15px;font-weight:600;color:#fff}
+/* QUICK ACTIONS */
+.qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.qa{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.qa-ico{width:52px;height:52px;border-radius:16px;background:#fff;border:1px solid var(--pb);display:flex;align-items:center;justify-content:center;transition:background .2s}
+.qa-ico:active{background:var(--pl)}
+.qa-ico svg{width:22px;height:22px;stroke:var(--pm);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.qa-lbl{font-size:10px;color:var(--pm);font-weight:500}
+/* TRANSACTIONS */
+.txn{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--pb);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.txn-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.txn-name{font-size:13px;font-weight:500;color:var(--td);margin-bottom:2px}
+.txn-det{font-size:11px;color:var(--ts)}
+.txn-pill{font-size:9px;padding:2px 7px;border-radius:10px;display:inline-block;margin-top:2px;background:var(--grb);color:var(--gr)}
+.txn-amt{text-align:right;flex-shrink:0}
+.txn-val{font-size:13px;font-weight:600}
+.txn-val.out{color:var(--r)}
+.txn-val.in{color:var(--gr)}
+.txn-time{font-size:10px;color:var(--ts);margin-top:2px}
+.sec-title{font-size:13px;font-weight:600;color:var(--td);margin-bottom:12px;margin-top:4px}
+/* SEND / PAYMENTS */
+.cat-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.cat-row::-webkit-scrollbar{display:none}
+.cat-btn{padding:8px 16px;border-radius:24px;border:1.5px solid var(--pb);font-size:12px;font-weight:600;color:var(--pm);background:#fff;cursor:pointer;white-space:nowrap;font-family:var(--font);flex-shrink:0;transition:all .15s}
+.cat-btn.on{background:var(--pm);color:#fff;border-color:var(--pm)}
+.method-row{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto}
+.method-row::-webkit-scrollbar{display:none}
+.mpill{padding:7px 12px;border-radius:24px;border:1.5px solid var(--pb);font-size:11px;font-weight:600;color:var(--ts);background:#fff;cursor:pointer;white-space:nowrap;font-family:var(--font);flex-shrink:0;transition:all .15s}
+.mpill.on{background:var(--pm);color:#fff;border-color:var(--pm)}
+.amt-box{background:var(--p);border-radius:16px;padding:18px;margin-bottom:14px}
+.amt-lbl{font-size:11px;color:#AFA9EC;margin-bottom:6px}
+.amt-val{font-size:30px;font-weight:700;color:#fff;letter-spacing:-1px}
+.qa-amts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.qa-amt{font-size:11px;padding:5px 10px;border-radius:20px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;cursor:pointer;font-weight:500;font-family:var(--font)}
+.qa-amt:active{background:rgba(255,255,255,.3)}
+.rate-strip{display:flex;justify-content:space-between;align-items:center;background:var(--pl);border-radius:12px;padding:10px 14px;margin-bottom:14px}
+.recv-box{background:#fff;border:1.5px solid var(--pb);border-radius:14px;padding:14px;margin-bottom:16px}
+.recv-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0}
+.recv-div{height:1px;background:var(--pb);margin:6px 0}
+/* BANK SEARCH */
+.bank-drop{background:#fff;border:1.5px solid var(--pb);border-radius:12px;margin-top:4px;max-height:180px;overflow-y:auto;box-shadow:0 6px 24px rgba(83,74,183,.14);display:none}
+.bank-opt{padding:11px 14px;font-size:13px;color:var(--td);cursor:pointer;border-bottom:0.5px solid var(--pb)}
+.bank-opt:last-child{border-bottom:none}
+.bank-opt:active{background:var(--pl)}
+.bank-chosen{background:var(--pl);border:1.5px solid var(--pb);border-radius:10px;padding:10px 12px;margin-top:6px;display:none;align-items:center;justify-content:space-between}
+.bank-chosen span:first-child{font-size:13px;font-weight:500;color:var(--pm)}
+.clear-bank{font-size:11px;color:var(--ts);cursor:pointer;padding:4px}
+.verify-chip{background:var(--grb);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--gr);font-weight:500;display:none}
+/* NETWORK GRID */
+.net-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.net-card{background:#fff;border:1.5px solid var(--pb);border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s}
+.net-card.on{border-color:var(--pm);background:var(--pl)}
+.net-logo{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin:0 auto 5px}
+.net-name{font-size:10px;color:var(--td);font-weight:500}
+/* AIRTIME GRID */
+.air-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.air-card{background:#fff;border:1.5px solid var(--pb);border-radius:12px;padding:10px 6px;text-align:center;font-size:12px;font-weight:600;color:var(--td);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.air-card.on{background:var(--pm);color:#fff;border-color:var(--pm)}
+/* DATA PLANS */
+.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.data-card{background:#fff;border:1.5px solid var(--pb);border-radius:14px;padding:12px 10px;text-align:center;cursor:pointer;transition:all .15s}
+.data-card.on{border-color:var(--pm);background:var(--pl)}
+.plan-size{font-size:16px;font-weight:700;color:var(--td);margin-bottom:3px}
+.plan-price{font-size:13px;font-weight:600;color:var(--g);margin-bottom:2px}
+.plan-days{font-size:10px;color:var(--ts)}
+.data-card.on .plan-size{color:var(--pm)}
+/* AI CHAT */
+.chat-area{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;gap:8px;align-items:flex-end}
+.msg.me{flex-direction:row-reverse}
+.msg-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;font-family:var(--font)}
+.bubble{max-width:230px;padding:10px 13px;font-size:12px;line-height:1.6;border-radius:16px}
+.msg .bubble{background:#fff;border:1px solid var(--pb);border-bottom-left-radius:4px;color:var(--td)}
+.msg.me .bubble{background:var(--pm);color:#fff;border-bottom-right-radius:4px}
+.msg-t{font-size:9px;color:var(--ts);margin-top:3px}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--pb);border-radius:16px 16px 16px 4px}
+.tdot{width:7px;height:7px;border-radius:50%;background:#AFA9EC;animation:bop 1.2s infinite}
+.tdot:nth-child(2){animation-delay:.2s}
+.tdot:nth-child(3){animation-delay:.4s}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.chip-row{display:flex;gap:6px;padding:0 14px 8px;flex-wrap:wrap;flex-shrink:0}
+.chip{font-size:10px;padding:5px 10px;border-radius:20px;border:1px solid var(--pb);color:var(--pm);background:#fff;cursor:pointer;font-family:var(--font)}
+.chat-bar{display:flex;gap:10px;padding:10px 14px 16px;background:#fff;border-top:1px solid var(--pb);align-items:center;flex-shrink:0}
+.chat-inp{flex:1;background:var(--pl);border:1.5px solid var(--pb);border-radius:24px;padding:10px 16px;font-size:12px;color:var(--td);font-family:var(--font);outline:none}
+.chat-snd{width:36px;height:36px;border-radius:50%;background:var(--pm);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-snd svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* PROFILE */
+.prof-hdr{background:var(--p);padding:14px 20px 28px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.prof-av{width:72px;height:72px;border-radius:50%;background:var(--pm);border:3px solid var(--g);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;margin-bottom:10px}
+.prof-name{font-size:18px;font-weight:600;color:#fff;margin-bottom:3px}
+.prof-id{font-size:11px;color:#AFA9EC;margin-bottom:10px}
+.kyc-chip{display:flex;align-items:center;gap:5px;background:var(--grb);border-radius:20px;padding:5px 12px}
+.kyc-dot{width:6px;height:6px;border-radius:50%;background:var(--gr)}
+.kyc-lbl{font-size:11px;color:var(--gr);font-weight:500}
+.menu-item{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--pb);border-radius:14px;padding:13px 14px;cursor:pointer;margin-bottom:8px;transition:border-color .15s}
+.menu-item:active{border-color:var(--pm);background:var(--pl)}
+.menu-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.menu-info{flex:1}
+.menu-title{font-size:13px;font-weight:600;color:var(--td)}
+.menu-sub{font-size:11px;color:var(--ts);margin-top:1px}
+.menu-arrow{color:#ccc;font-size:16px}
+/* FRAUD */
+.fstat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.fstat{border-radius:14px;padding:14px}
+.alert-card{background:#fff;border:1.5px solid var(--pb);border-radius:16px;padding:14px;margin-bottom:10px}
+.alert-card.danger{border-color:#F09595}
+.alert-card.warn{border-color:#FAC775}
+.alert-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.alert-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+.risk-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.risk-lbl{font-size:10px;color:var(--ts);width:56px;flex-shrink:0}
+.risk-track{flex:1;height:6px;background:var(--pl);border-radius:3px;overflow:hidden}
+.risk-fill{height:100%;border-radius:3px}
+.risk-pct{font-size:10px;font-weight:600;width:30px;text-align:right}
+.alert-body{font-size:12px;color:#444;line-height:1.6;margin-bottom:10px}
+.alert-acts{display:flex;gap:8px}
+.act-btn{flex:1;padding:9px;border-radius:10px;font-size:11px;font-weight:600;font-family:var(--font);border:none;cursor:pointer}
+.act-block{background:var(--rb);color:var(--r)}
+.act-ok{background:var(--grb);color:var(--gr)}
+.act-dim{background:var(--pl);color:var(--pm)}
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--ts)}
+.empty-ico{font-size:40px;margin-bottom:12px}
+.empty-title{font-size:14px;font-weight:600;color:var(--td);margin-bottom:6px}
+.empty-sub{font-size:12px;line-height:1.6}
+/* INFO ROWS */
+.info-row{background:#fff;border:1.5px solid var(--pb);border-radius:12px;padding:13px 14px;margin-bottom:8px}
+.info-lbl{font-size:10px;color:var(--ts);margin-bottom:3px}
+.info-val{font-size:14px;font-weight:500;color:var(--td)}
+/* SECTION LABEL */
+.section{font-size:13px;font-weight:600;color:var(--td);margin:4px 0 12px}
+/* AI BADGE */
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:var(--pm);border-radius:20px;padding:4px 10px;margin-top:6px}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ai-badge-txt{font-size:10px;color:#CECBF6}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="toast"></div>
+
+<!-- ══ SPLASH ══ -->
+<div class="sc on" id="s-splash" style="background:var(--p);align-items:center;justify-content:center;padding:2rem 2rem 3rem;text-align:center">
+  <div class="spl-logo"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="18" stroke="#EF9F27" stroke-width="2"/><path d="M13 22h18M22 13l9 9-9 9" stroke="#EF9F27" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="spl-name">OnePay</div>
+  <div class="spl-tag">Fast, secure Nigerian payments. Bank transfers, airtime &amp; data — all in one app.</div>
+  <button class="btn btn-gold" onclick="go('s-signup')" style="margin-bottom:12px">Create free account</button>
+  <button class="btn btn-outline" onclick="go('s-login')">I already have an account</button>
+  <div class="spl-ftr" style="margin-top:24px">🇳🇬 Made for Nigeria · Secured by Firebase</div>
+</div>
+
+<!-- ══ SIGN UP ══ -->
+<div class="sc" id="s-signup">
+  <div class="sb"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-splash')"><div class="hdr-back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="hdr-back-lbl">Back</span></div>
+    <div class="hdr-title">Create account</div>
+    <div class="hdr-sub">Join OnePay — takes 2 minutes</div>
+  </div>
+  <div class="body">
+    <div class="fgrp"><div class="flbl">Full name</div><input id="su-name" class="finp" placeholder="Your full name" type="text"></div>
+    <div class="fgrp"><div class="flbl">Email address</div><input id="su-email" class="finp" placeholder="you@email.com" type="email"></div>
+    <div class="fgrp"><div class="flbl">Phone number</div><input id="su-phone" class="finp" placeholder="+234 801 234 5678" type="tel"></div>
+    <div class="row2">
+      <div class="fgrp"><div class="flbl">Country</div><select id="su-country" class="finp"><option>Nigeria</option><option>Ghana</option><option>Kenya</option><option>South Africa</option></select></div>
+      <div class="fgrp"><div class="flbl">Currency</div><select id="su-currency" class="finp"><option>NGN</option><option>GHS</option><option>KES</option><option>ZAR</option></select></div>
+    </div>
+    <div class="fgrp"><div class="flbl">Password (min 6 characters)</div><input id="su-pass" class="finp" placeholder="Create a strong password" type="password"></div>
+    <div class="err" id="su-err"></div>
+    <p style="font-size:11px;color:var(--ts);text-align:center;margin-bottom:14px;line-height:1.6">By continuing you agree to our <span style="color:var(--g)">Terms of Service</span> and <span style="color:var(--g)">Privacy Policy</span></p>
+    <button class="btn btn-purple" id="su-btn" onclick="doSignup()">Create my account</button>
+    <p style="font-size:12px;color:var(--ts);text-align:center;margin-top:14px">Already have an account? <span style="color:var(--g);cursor:pointer" onclick="go('s-login')">Sign in</span></p>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div class="sc" id="s-login">
+  <div class="sb"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-splash')"><div class="hdr-back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="hdr-back-lbl">Back</span></div>
+    <div class="hdr-title">Welcome back</div>
+    <div class="hdr-sub">Sign in to your OnePay account</div>
+  </div>
+  <div class="body">
+    <div class="fgrp"><div class="flbl">Email address</div><input id="li-email" class="finp" placeholder="you@email.com" type="email"></div>
+    <div class="fgrp"><div class="flbl">Password</div><input id="li-pass" class="finp" placeholder="Your password" type="password"></div>
+    <div class="err" id="li-err"></div>
+    <button class="btn btn-purple" id="li-btn" onclick="doLogin()" style="margin-bottom:14px">Sign in</button>
+    <p style="font-size:12px;color:var(--ts);text-align:center">No account? <span style="color:var(--g);cursor:pointer" onclick="go('s-signup')">Create one free</span></p>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="sc" id="s-dashboard">
+  <div class="dash-hdr">
+    <div class="dash-top">
+      <div><div class="dash-greet">Good day,</div><div class="dash-name" id="d-name">Loading...</div></div>
+      <div class="notif" onclick="go('s-fraud')"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2a5 5 0 0 1 5 5v2.5l1.5 2.5H2.5L4 9.5V7a5 5 0 0 1 5-5z" stroke="#CECBF6" stroke-width="1.3"/><path d="M7 14.5a2 2 0 0 0 4 0" stroke="#CECBF6" stroke-width="1.3"/></svg><div class="notif-dot"></div></div>
+    </div>
+    <div class="bal-card">
+      <div class="bal-lbl">Total balance</div>
+      <div class="bal-amt" id="d-bal">₦ 0.00</div>
+      <div class="bal-cur">Nigerian Naira · NGN</div>
+      <div class="bal-stats">
+        <div class="bstat"><div class="bstat-lbl">Money in</div><div class="bstat-val" id="d-in">₦0</div></div>
+        <div class="bstat"><div class="bstat-lbl">Money out</div><div class="bstat-val" id="d-out">₦0</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="section">Quick actions</div>
+    <div class="qa-grid">
+      <div class="qa" onclick="go('s-send')"><div class="qa-ico"><svg viewBox="0 0 22 22"><path d="M3 11h16M14 5l6 6-6 6"/></svg></div><div class="qa-lbl">Send</div></div>
+      <div class="qa" onclick="showToast('Receive feature coming soon!')"><div class="qa-ico"><svg viewBox="0 0 22 22"><path d="M19 11H3M8 5L2 11l6 6"/></svg></div><div class="qa-lbl">Receive</div></div>
+      <div class="qa" onclick="showToast('Top up via bank transfer coming soon!')"><div class="qa-ico"><svg viewBox="0 0 22 22"><rect x="3" y="7" width="16" height="11" rx="2"/><path d="M3 11h16"/><circle cx="7" cy="15" r="1.2" fill="var(--pm)" stroke="none"/></svg></div><div class="qa-lbl">Top up</div></div>
+      <div class="qa" onclick="go('s-ai')"><div class="qa-ico"><svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8"/><path d="M11 7v4l3 3"/></svg></div><div class="qa-lbl">AI Help</div></div>
+    </div>
+    <div class="section">Recent transactions</div>
+    <div id="d-txns">
+      <div class="empty"><div class="empty-ico">💳</div><div class="empty-title">No transactions yet</div><div class="empty-sub">Your transaction history will appear here after your first payment.</div></div>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="bni on" onclick="go('s-dashboard')"><svg viewBox="0 0 22 22"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg><span>Home</span></button>
+    <button class="bni" onclick="go('s-send')"><svg viewBox="0 0 22 22"><path d="M3 11h16M14 5l6 6-6 6"/></svg><span>Send</span></button>
+    <button class="bni" onclick="go('s-ai')"><svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8"/><path d="M8 11h6M11 8v6"/></svg><span>AI</span></button>
+    <button class="bni" onclick="go('s-fraud')"><svg viewBox="0 0 22 22"><path d="M11 3l8 4v5c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7l8-4z"/></svg><span>Security</span></button>
+    <button class="bni" onclick="go('s-profile')"><svg viewBox="0 0 22 22"><circle cx="11" cy="7" r="4"/><path d="M3 19c0-4 3.582-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+  </div>
+</div>
+
+<!-- ══ SEND / PAYMENTS ══ -->
+<div class="sc" id="s-send">
+  <div class="sb"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-dashboard')"><div class="hdr-back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="hdr-back-lbl">Back</span></div>
+    <div class="hdr-title">Payments</div>
+    <div class="hdr-sub">Transfer · Airtime · Data</div>
+  </div>
+  <div class="body">
+    <div class="cat-row">
+      <button class="cat-btn on" id="ct-transfer" onclick="switchCat('transfer')">🏦 Transfer</button>
+      <button class="cat-btn" id="ct-airtime" onclick="switchCat('airtime')">📞 Airtime</button>
+      <button class="cat-btn" id="ct-data" onclick="switchCat('data')">📶 Data</button>
+    </div>
+    <div style="background:var(--pl);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--pm);text-align:center">🇳🇬 Nigeria only for now · More countries coming soon</div>
+
+    <!-- TRANSFER -->
+    <div id="cat-transfer">
+      <div class="method-row">
+        <button class="mpill on" id="mp-bank" onclick="switchMethod('bank',this)">🏦 Bank</button>
+        <button class="mpill" id="mp-mfb" onclick="switchMethod('mfb',this)">🏘️ Microfinance</button>
+        <button class="mpill" id="mp-phone" onclick="switchMethod('phone',this)">📱 Phone</button>
+        <button class="mpill" id="mp-tag" onclick="switchMethod('tag',this)">🏷️ Tag</button>
+      </div>
+      <!-- BANK -->
+      <div id="m-bank">
+        <div class="fgrp">
+          <div class="flbl">Search bank</div>
+          <input class="finp" id="bank-inp" placeholder="Type to search bank…" oninput="filterBanks(this.value,'bank-drop-list',allBanks,'bank-chosen-name','bank-chosen-box')" autocomplete="off">
+          <div class="bank-drop" id="bank-drop-list"></div>
+          <div class="bank-chosen" id="bank-chosen-box"><span id="bank-chosen-name"></span><span class="clear-bank" onclick="clearBank('bank-inp','bank-chosen-box')">✕ Change</span></div>
+        </div>
+        <div class="fgrp"><div class="flbl">Account number</div><input class="finp" id="acct-num" placeholder="0123456789" type="tel" maxlength="10" oninput="verifyAcct(this)"></div>
+        <div class="verify-chip" id="acct-verified">✓ Account name verified</div>
+      </div>
+      <!-- MFB -->
+      <div id="m-mfb" style="display:none">
+        <div class="fgrp">
+          <div class="flbl">Search microfinance bank</div>
+          <input class="finp" id="mfb-inp" placeholder="Type MFB name…" oninput="filterBanks(this.value,'mfb-drop-list',mfbList,'mfb-chosen-name','mfb-chosen-box')" autocomplete="off">
+          <div class="bank-drop" id="mfb-drop-list"></div>
+          <div class="bank-chosen" id="mfb-chosen-box"><span id="mfb-chosen-name"></span><span class="clear-bank" onclick="clearBank('mfb-inp','mfb-chosen-box')">✕ Change</span></div>
+        </div>
+        <div class="fgrp"><div class="flbl">Account number</div><input class="finp" placeholder="0123456789" type="tel" maxlength="10" oninput="verifyAcct(this)"></div>
+      </div>
+      <!-- PHONE -->
+      <div id="m-phone" style="display:none">
+        <div class="fgrp"><div class="flbl">Phone number</div><input class="finp" placeholder="+234 801 234 5678" type="tel"></div>
+        <div class="fgrp"><div class="flbl">Network</div><select class="finp"><option>Auto-detect</option><option>MTN</option><option>Airtel</option><option>Glo</option><option>9mobile</option></select></div>
+      </div>
+      <!-- TAG -->
+      <div id="m-tag" style="display:none">
+        <div class="fgrp"><div class="flbl">OnePay tag</div><input class="finp" placeholder="@username or OP-NG-XXXXX" type="text"></div>
+      </div>
+      <div class="amt-box">
+        <div class="amt-lbl">Amount (NGN)</div>
+        <div class="amt-val" id="tr-amt">₦ 0</div>
+        <div class="qa-amts">
+          <span class="qa-amt" onclick="setAmt('tr-amt','1000')">₦1K</span>
+          <span class="qa-amt" onclick="setAmt('tr-amt','5000')">₦5K</span>
+          <span class="qa-amt" onclick="setAmt('tr-amt','10000')">₦10K</span>
+          <span class="qa-amt" onclick="setAmt('tr-amt','20000')">₦20K</span>
+          <span class="qa-amt" onclick="setAmt('tr-amt','50000')">₦50K</span>
+          <span class="qa-amt" onclick="setAmt('tr-amt','100000')">₦100K</span>
+        </div>
+      </div>
+      <div class="fgrp"><div class="flbl">Narration (optional)</div><input class="finp" id="tr-narr" placeholder="e.g. Rent, School fees, Business…" type="text"></div>
+      <div class="recv-box">
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Recipient gets</span><span style="font-size:14px;font-weight:600;color:var(--pm)" id="tr-recv">₦ 0</span></div>
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Transfer fee</span><span style="font-size:13px;font-weight:600;color:var(--gr)">Free</span></div>
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Delivery</span><span style="font-size:13px;color:var(--td)">Instant</span></div>
+      </div>
+      <button class="btn btn-purple" onclick="doTransfer()">Confirm &amp; send</button>
+    </div>
+
+    <!-- AIRTIME -->
+    <div id="cat-airtime" style="display:none">
+      <div class="fgrp"><div class="flbl">Phone number</div><input class="finp" id="air-phone" placeholder="+234 801 234 5678" type="tel"></div>
+      <div class="flbl" style="margin-bottom:8px">Select network</div>
+      <div class="net-grid">
+        <div class="net-card on" id="an-mtn" onclick="selNet('mtn','air')"><div class="net-logo" style="background:#FFC300;color:#1a1a1a">MTN</div><div class="net-name">MTN</div></div>
+        <div class="net-card" id="an-airtel" onclick="selNet('airtel','air')"><div class="net-logo" style="background:#E01A22;color:#fff">AIR</div><div class="net-name">Airtel</div></div>
+        <div class="net-card" id="an-glo" onclick="selNet('glo','air')"><div class="net-logo" style="background:#008000;color:#fff">GLO</div><div class="net-name">Glo</div></div>
+        <div class="net-card" id="an-9mobile" onclick="selNet('9mobile','air')"><div class="net-logo" style="background:#006E33;color:#fff">9MB</div><div class="net-name">9mobile</div></div>
+      </div>
+      <div class="flbl" style="margin:12px 0 8px">Select amount</div>
+      <div class="air-grid">
+        <div class="air-card" onclick="selAir(this,'50')">₦50</div>
+        <div class="air-card" onclick="selAir(this,'100')">₦100</div>
+        <div class="air-card on" onclick="selAir(this,'200')">₦200</div>
+        <div class="air-card" onclick="selAir(this,'500')">₦500</div>
+        <div class="air-card" onclick="selAir(this,'1000')">₦1,000</div>
+        <div class="air-card" onclick="selAir(this,'2000')">₦2,000</div>
+        <div class="air-card" onclick="selAir(this,'3000')">₦3,000</div>
+        <div class="air-card" onclick="selAir(this,'5000')">₦5,000</div>
+      </div>
+      <div class="fgrp" style="margin-top:12px"><div class="flbl">Or enter custom amount (₦)</div><input class="finp" id="air-custom" placeholder="Enter amount" type="number" oninput="document.querySelectorAll('.air-card').forEach(c=>c.classList.remove('on'))"></div>
+      <div class="recv-box">
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Network</span><span style="font-size:13px;font-weight:600;color:var(--td)" id="air-net-disp">MTN</span></div>
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Amount</span><span style="font-size:14px;font-weight:700;color:var(--pm)" id="air-amt-disp">₦200</span></div>
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Delivery</span><span style="font-size:13px;color:var(--td)">Instant</span></div>
+      </div>
+      <button class="btn btn-purple" onclick="doBuyAirtime()">Buy airtime now</button>
+    </div>
+
+    <!-- DATA -->
+    <div id="cat-data" style="display:none">
+      <div class="fgrp"><div class="flbl">Phone number</div><input class="finp" id="dat-phone" placeholder="+234 801 234 5678" type="tel"></div>
+      <div class="flbl" style="margin-bottom:8px">Select network</div>
+      <div class="net-grid">
+        <div class="net-card on" id="dn-mtn" onclick="selNet('mtn','dat')"><div class="net-logo" style="background:#FFC300;color:#1a1a1a">MTN</div><div class="net-name">MTN</div></div>
+        <div class="net-card" id="dn-airtel" onclick="selNet('airtel','dat')"><div class="net-logo" style="background:#E01A22;color:#fff">AIR</div><div class="net-name">Airtel</div></div>
+        <div class="net-card" id="dn-glo" onclick="selNet('glo','dat')"><div class="net-logo" style="background:#008000;color:#fff">GLO</div><div class="net-name">Glo</div></div>
+        <div class="net-card" id="dn-9mobile" onclick="selNet('9mobile','dat')"><div class="net-logo" style="background:#006E33;color:#fff">9MB</div><div class="net-name">9mobile</div></div>
+      </div>
+      <div class="flbl" style="margin:12px 0 8px">Choose data plan</div>
+      <div class="data-grid">
+        <div class="data-card on" onclick="selPlan(this,'100MB','100','1 day')"><div class="plan-size">100MB</div><div class="plan-price">₦100</div><div class="plan-days">1 day</div></div>
+        <div class="data-card" onclick="selPlan(this,'500MB','300','7 days')"><div class="plan-size">500MB</div><div class="plan-price">₦300</div><div class="plan-days">7 days</div></div>
+        <div class="data-card" onclick="selPlan(this,'1GB','500','30 days')"><div class="plan-size">1GB</div><div class="plan-price">₦500</div><div class="plan-days">30 days</div></div>
+        <div class="data-card" onclick="selPlan(this,'2GB','1000','30 days')"><div class="plan-size">2GB</div><div class="plan-price">₦1,000</div><div class="plan-days">30 days</div></div>
+        <div class="data-card" onclick="selPlan(this,'5GB','2000','30 days')"><div class="plan-size">5GB</div><div class="plan-price">₦2,000</div><div class="plan-days">30 days</div></div>
+        <div class="data-card" onclick="selPlan(this,'10GB','3500','30 days')"><div class="plan-size">10GB</div><div class="plan-price">₦3,500</div><div class="plan-days">30 days</div></div>
+        <div class="data-card" onclick="selPlan(this,'20GB','6000','30 days')"><div class="plan-size">20GB</div><div class="plan-price">₦6,000</div><div class="plan-days">30 days</div></div>
+        <div class="data-card" onclick="selPlan(this,'50GB','12000','30 days')"><div class="plan-size">50GB</div><div class="plan-price">₦12,000</div><div class="plan-days">30 days</div></div>
+      </div>
+      <div class="recv-box" style="margin-top:14px">
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Network</span><span style="font-size:13px;font-weight:600;color:var(--td)" id="dat-net-disp">MTN</span></div>
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Plan</span><span style="font-size:13px;font-weight:600;color:var(--pm)" id="dat-plan-disp">100MB · 1 day</span></div>
+        <div class="recv-row"><span style="font-size:12px;color:var(--ts)">Amount</span><span style="font-size:14px;font-weight:700;color:var(--td)" id="dat-price-disp">₦100</span></div>
+      </div>
+      <button class="btn btn-purple" onclick="doBuyData()">Buy data now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AI ASSISTANT ══ -->
+<div class="sc" id="s-ai">
+  <div class="sb"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-dashboard')"><div class="hdr-back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="hdr-back-lbl">Back</span></div>
+    <div class="hdr-title">AI Assistant</div>
+    <div class="ai-badge"><div class="ai-dot"></div><div class="ai-badge-txt">Powered by Claude</div></div>
+  </div>
+  <div class="chat-area" id="chat-area">
+    <div class="msg"><div class="msg-av" style="background:var(--pm);color:#fff">AI</div><div><div class="bubble">Hello! I'm your OnePay AI assistant. Ask me anything about your account, transfers, airtime, data, or Nigerian banking.</div><div class="msg-t">Now</div></div></div>
+  </div>
+  <div class="chip-row">
+    <span class="chip" onclick="chipSend(this)">How to send money?</span>
+    <span class="chip" onclick="chipSend(this)">Buy airtime steps</span>
+    <span class="chip" onclick="chipSend(this)">My account balance</span>
+    <span class="chip" onclick="chipSend(this)">Is my account safe?</span>
+  </div>
+  <div class="chat-bar">
+    <input class="chat-inp" id="chat-inp" placeholder="Ask me anything…" onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-snd" onclick="sendChat()"><svg viewBox="0 0 16 16"><path d="M2 8h12M9 3l5 5-5 5"/></svg></button>
+  </div>
+</div>
+
+<!-- ══ SECURITY / FRAUD ══ -->
+<div class="sc" id="s-fraud">
+  <div class="sb"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-dashboard')"><div class="hdr-back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="hdr-back-lbl">Back</span></div>
+    <div class="hdr-title">Security alerts</div>
+    <div class="hdr-sub">AI monitors your account in real time</div>
+  </div>
+  <div class="body">
+    <div class="fstat-grid">
+      <div class="fstat" style="background:var(--grb)"><div style="font-size:10px;color:var(--gr);font-weight:500;margin-bottom:4px">Safe transactions</div><div style="font-size:24px;font-weight:700;color:var(--gr)" id="sec-safe">0</div></div>
+      <div class="fstat" style="background:var(--rb)"><div style="font-size:10px;color:var(--r);font-weight:500;margin-bottom:4px">Flagged</div><div style="font-size:24px;font-weight:700;color:var(--r)">0</div></div>
+    </div>
+    <div class="alert-card" style="border-color:var(--grb)">
+      <div class="alert-top"><div class="alert-ico" style="background:var(--grb)">✅</div><div><div style="font-size:13px;font-weight:600;color:var(--td)">All transactions safe</div><div style="font-size:11px;color:var(--ts);margin-top:1px">No suspicious activity detected</div></div></div>
+      <div class="alert-body">OnePay AI has reviewed your recent account activity. Everything looks normal and secure.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--td);margin-bottom:10px">🔒 Security tips</div>
+      <div style="font-size:12px;color:var(--ts);line-height:1.8">
+        ✓ Never share your password with anyone<br>
+        ✓ OnePay will never ask for your password via SMS<br>
+        ✓ Always verify recipient details before sending<br>
+        ✓ Log out after using shared devices<br>
+        ✓ Report suspicious activity immediately
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROFILE ══ -->
+<div class="sc" id="s-profile">
+  <div class="prof-hdr">
+    <div class="prof-av" id="p-av">OP</div>
+    <div class="prof-name" id="p-name">Loading...</div>
+    <div class="prof-id" id="p-id">ID: OP-NG-00001 · Nigeria</div>
+    <div class="kyc-chip"><div class="kyc-dot"></div><div class="kyc-lbl">Account active</div></div>
+  </div>
+  <div class="body">
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--ts);margin-bottom:4px">NGN Wallet balance</div>
+      <div style="font-size:22px;font-weight:700;color:var(--td)" id="p-bal">₦ 0.00</div>
+      <div style="font-size:11px;color:var(--ts);margin-top:2px">🇳🇬 Nigerian Naira</div>
+    </div>
+    <div class="section">Account settings</div>
+    <div class="menu-item" onclick="go('s-personal-info')"><div class="menu-ico" style="background:var(--pl)">👤</div><div class="menu-info"><div class="menu-title">Personal information</div><div class="menu-sub">Name, email, phone number</div></div><div class="menu-arrow">›</div></div>
+    <div class="menu-item" onclick="go('s-security-screen')"><div class="menu-ico" style="background:var(--grb)">🔐</div><div class="menu-info"><div class="menu-title">Security &amp; password</div><div class="menu-sub">Change password, account protection</div></div><div class="menu-arrow">›</div></div>
+    <div class="menu-item" onclick="showToast('KYC documents coming soon. Your account is currently active.')"><div class="menu-ico" style="background:var(--gl)">📋</div><div class="menu-info"><div class="menu-title">KYC verification</div><div class="menu-sub">Identity verification — coming soon</div></div><div class="menu-arrow">›</div></div>
+    <div class="menu-item" onclick="showToast('African transfers coming soon — Nigeria working perfectly first!')"><div class="menu-ico" style="background:#E1F5EE">🌍</div><div class="menu-info"><div class="menu-title">African transfers</div><div class="menu-sub">Coming soon — Nigeria first</div></div><div class="menu-arrow">›</div></div>
+    <div style="margin-top:8px"><button class="btn btn-red" onclick="doLogout()">Sign out</button></div>
+  </div>
+  <div class="bnav">
+    <button class="bni" onclick="go('s-dashboard')"><svg viewBox="0 0 22 22"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg><span>Home</span></button>
+    <button class="bni" onclick="go('s-send')"><svg viewBox="0 0 22 22"><path d="M3 11h16M14 5l6 6-6 6"/></svg><span>Send</span></button>
+    <button class="bni" onclick="go('s-ai')"><svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8"/><path d="M8 11h6M11 8v6"/></svg><span>AI</span></button>
+    <button class="bni" onclick="go('s-fraud')"><svg viewBox="0 0 22 22"><path d="M11 3l8 4v5c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7l8-4z"/></svg><span>Security</span></button>
+    <button class="bni on" onclick="go('s-profile')"><svg viewBox="0 0 22 22"><circle cx="11" cy="7" r="4"/><path d="M3 19c0-4 3.582-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+  </div>
+</div>
+
+<!-- ══ PERSONAL INFO ══ -->
+<div class="sc" id="s-personal-info">
+  <div class="sb"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-profile')"><div class="hdr-back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="hdr-back-lbl">Back</span></div>
+    <div class="hdr-title">Personal information</div>
+    <div class="hdr-sub">Your account details</div>
+  </div>
+  <div class="body">
+    <div class="info-row"><div class="info-lbl">Full name</div><div class="info-val" id="pi-name">—</div></div>
+    <div class="info-row"><div class="info-lbl">Email address</div><div class="info-val" id="pi-email">—</div></div>
+    <div class="info-row"><div class="info-lbl">Phone number</div><div class="info-val" id="pi-phone">—</div></div>
+    <div class="info-row"><div class="info-lbl">Country</div><div class="info-val" id="pi-country">Nigeria</div></div>
+    <div class="info-row"><div class="info-lbl">Currency</div><div class="info-val">NGN — Nigerian Naira</div></div>
+    <div class="info-row"><div class="info-lbl">Account ID</div><div class="info-val" id="pi-id">—</div></div>
+    <div style="background:var(--gl);border-radius:12px;padding:13px 14px;margin-top:8px;font-size:12px;color:#854F0B;line-height:1.6">ℹ️ To update your personal details, please contact OnePay support. This protects your account from unauthorised changes.</div>
+  </div>
+</div>
+
+<!-- ══ SECURITY SCREEN ══ -->
+<div class="sc" id="s-security-screen">
+  <div class="sb"><span>9:41</span><span>●●●●</span><span>100%</span></div>
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-profile')"><div class="hdr-back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="hdr-back-lbl">Back</span></div>
+    <div class="hdr-title">Security &amp; password</div>
+    <div class="hdr-sub">Keep your account safe</div>
+  </div>
+  <div class="body">
+    <div class="card" style="margin-bottom:16px;background:var(--grb);border-color:var(--grb)">
+      <div style="display:flex;align-items:center;gap:12px"><div style="font-size:28px">🔒</div><div><div style="font-size:13px;font-weight:600;color:var(--gr)">Account secured</div><div style="font-size:11px;color:var(--gr);margin-top:2px">Protected by Firebase Authentication</div></div></div>
+    </div>
+    <div class="section">Change password</div>
+    <div class="fgrp"><div class="flbl">New password</div><input class="finp" id="new-pass" placeholder="Enter new password (min 6 chars)" type="password"></div>
+    <div class="fgrp"><div class="flbl">Confirm new password</div><input class="finp" id="conf-pass" placeholder="Confirm new password" type="password"></div>
+    <div class="err" id="pass-err"></div>
+    <button class="btn btn-purple" onclick="changePass()" style="margin-bottom:20px">Update password</button>
+    <div class="section">Security tips</div>
+    <div class="card"><div style="font-size:12px;color:var(--ts);line-height:1.8">✓ Never share your password with anyone<br>✓ Use a unique password for OnePay<br>✓ OnePay will never ask for your password via SMS<br>✓ Log out after using shared devices</div></div>
+  </div>
+</div>
+
+</div><!-- end #app -->
+
+<script>
+// ════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════
+function go(id) {
+  document.querySelectorAll('.sc').forEach(function(s){ s.classList.remove('on'); });
+  var el = document.getElementById(id);
+  if(el){ el.classList.add('on'); el.scrollTop = 0; }
+}
+
+// ════════════════════════════════════
+// TOAST
+// ════════════════════════════════════
+var _toastTimer;
+function showToast(msg, type) {
+  clearTimeout(_toastTimer);
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type === 'err' ? 'show err-t' : 'show';
+  _toastTimer = setTimeout(function(){ t.className=''; }, 3500);
+}
+
+// ════════════════════════════════════
+// BANK DATA
+// ════════════════════════════════════
+var allBanks = [
+  'Access Bank','Citibank Nigeria','Ecobank Nigeria','Fidelity Bank',
+  'First Bank of Nigeria','FCMB','GTBank','Heritage Bank','Keystone Bank',
+  'Optimus Bank','Polaris Bank','Providus Bank','Stanbic IBTC Bank',
+  'Sterling Bank','Union Bank','UBA','Unity Bank','Wema Bank','Zenith Bank',
+  'Kuda Bank','Opay','Moniepoint','PalmPay','Carbon','FairMoney','Raven Bank'
+];
+var mfbList = [
+  'AB Microfinance Bank','ACCION Microfinance Bank','Addosser MFB',
+  'Baobab Microfinance Bank','Chanelle MFB','Dot Microfinance Bank',
+  'FairMoney Microfinance Bank','Grooming MFB','IBILE Microfinance Bank',
+  'LAPO Microfinance Bank','Letshego MFB','Mint Finex MFB',
+  'Moniepoint MFB','NIRSAL Microfinance Bank','NPF Microfinance Bank',
+  'Page MFB','Peace MFB','Rubies Bank','Safe Haven MFB',
+  'Sparkle Microfinance Bank','TCF MFB','Unilag MFB',
+  'VFD Microfinance Bank','Vision Fund MFB','Wetland MFB',
+  'Yes Microfinance Bank','Zikra MFB'
+];
+
+function filterBanks(q, dropId, list, nameId, boxId) {
+  var drop = document.getElementById(dropId);
+  if(!q.trim()){ drop.style.display='none'; return; }
+  var matches = list.filter(function(b){ return b.toLowerCase().indexOf(q.toLowerCase()) > -1; }).slice(0,8);
+  if(!matches.length){ drop.innerHTML='<div class="bank-opt">No results</div>'; drop.style.display='block'; return; }
+  drop.innerHTML = matches.map(function(b){
+    return '<div class="bank-opt" onclick="selBank(\''+b+'\',\''+dropId+'\',\''+nameId+'\',\''+boxId+'\')">'+b+'</div>';
+  }).join('');
+  drop.style.display = 'block';
+}
+function selBank(name, dropId, nameId, boxId) {
+  document.getElementById(dropId).style.display = 'none';
+  document.getElementById(nameId).textContent = name;
+  var box = document.getElementById(boxId);
+  box.style.display = 'flex';
+  if(dropId==='bank-drop-list') document.getElementById('bank-inp').value='';
+  else document.getElementById('mfb-inp').value='';
+}
+function clearBank(inpId, boxId) {
+  document.getElementById(inpId).value='';
+  document.getElementById(boxId).style.display='none';
+}
+function verifyAcct(inp) {
+  var chip = document.getElementById('acct-verified');
+  if(chip) chip.style.display = inp.value.length===10 ? 'block' : 'none';
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#bank-inp') && !e.target.closest('#bank-drop-list')) {
+    var d = document.getElementById('bank-drop-list');
+    if(d) d.style.display='none';
+  }
+  if(!e.target.closest('#mfb-inp') && !e.target.closest('#mfb-drop-list')) {
+    var d = document.getElementById('mfb-drop-list');
+    if(d) d.style.display='none';
+  }
+});
+
+// ════════════════════════════════════
+// SEND SCREEN SWITCHING
+// ════════════════════════════════════
+function switchCat(cat) {
+  ['transfer','airtime','data'].forEach(function(c){
+    var btn = document.getElementById('ct-'+c);
+    var form = document.getElementById('cat-'+c);
+    if(btn) btn.className = 'cat-btn' + (c===cat?' on':'');
+    if(form) form.style.display = c===cat ? 'block' : 'none';
+  });
+}
+function switchMethod(method, el) {
+  document.querySelectorAll('.mpill').forEach(function(p){ p.classList.remove('on'); });
+  el.classList.add('on');
+  ['bank','mfb','phone','tag'].forEach(function(m){
+    var d = document.getElementById('m-'+m);
+    if(d) d.style.display = m===method ? 'block' : 'none';
+  });
+  document.getElementById('acct-verified').style.display='none';
+}
+
+// ════════════════════════════════════
+// AMOUNTS
+// ════════════════════════════════════
+function setAmt(id, val) {
+  var n = parseInt(val);
+  document.getElementById(id).textContent = '₦ ' + n.toLocaleString();
+  if(id==='tr-amt') document.getElementById('tr-recv').textContent = '₦ ' + n.toLocaleString();
+}
+
+// ════════════════════════════════════
+// AIRTIME
+// ════════════════════════════════════
+var airNet = 'MTN', airAmt = 200;
+function selNet(net, prefix) {
+  var nets = ['mtn','airtel','glo','9mobile'];
+  nets.forEach(function(n){
+    var el = document.getElementById((prefix==='air'?'an':'dn')+'-'+n);
+    if(el) el.className = 'net-card' + (n===net?' on':'');
+  });
+  if(prefix==='air'){ airNet=net.toUpperCase(); document.getElementById('air-net-disp').textContent=airNet; }
+  else { datNet=net.toUpperCase(); document.getElementById('dat-net-disp').textContent=datNet; }
+}
+function selAir(el, val) {
+  document.querySelectorAll('.air-card').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+  airAmt = parseInt(val);
+  document.getElementById('air-amt-disp').textContent = '₦' + airAmt.toLocaleString();
+  document.getElementById('air-custom').value = '';
+}
+
+// ════════════════════════════════════
+// DATA
+// ════════════════════════════════════
+var datNet='MTN', datSize='100MB', datPrice=100, datDays='1 day';
+function selPlan(el, size, price, days) {
+  document.querySelectorAll('.data-card').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+  datSize=size; datPrice=parseInt(price); datDays=days;
+  document.getElementById('dat-plan-disp').textContent = size+' · '+days;
+  document.getElementById('dat-price-disp').textContent = '₦'+parseInt(price).toLocaleString();
+}
+
+// ════════════════════════════════════
+// AI CHAT
+// ════════════════════════════════════
+var chatLog = [];
+function chipSend(el) { document.getElementById('chat-inp').value=el.textContent; sendChat(); }
+async function sendChat() {
+  var inp = document.getElementById('chat-inp');
+  var text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  document.querySelector('.chip-row').style.display='none';
+  addMsg('me', text);
+  chatLog.push({role:'user',content:text});
+  var typing = addTyping();
+  var p = window._userProfile || {};
+  var ctx = p.fullName ? 'User: '+p.fullName+', Balance: ₦'+Number(p.balance||0).toLocaleString()+', Country: '+(p.country||'Nigeria') : 'New OnePay user in Nigeria';
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:'You are the OnePay AI assistant — a friendly, helpful financial assistant for a Nigerian digital payments app. '+ctx+'. OnePay currently supports: local Nigerian bank transfers, microfinance bank transfers, airtime top-up (MTN/Airtel/Glo/9mobile), and data bundles. African cross-border transfers are coming soon. Keep replies short (2-3 sentences), warm and practical. Use ₦ for Naira.',
+        messages:chatLog
+      })
+    });
+    var data = await res.json();
+    var reply = (data.content||[]).map(function(b){return b.text||'';}).join('')||'I could not connect right now. Please try again.';
+    typing.remove();
+    chatLog.push({role:'assistant',content:reply});
+    addMsg('ai',reply);
+  } catch(e) {
+    typing.remove();
+    addMsg('ai','Having trouble connecting. Please check your internet and try again.');
+  }
+}
+function addMsg(role, text) {
+  var area = document.getElementById('chat-area');
+  var d = new Date(); var t=d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes();
+  var div = document.createElement('div');
+  div.className = 'msg'+(role==='me'?' me':'');
+  var avBg = role==='ai' ? 'background:var(--pm);color:#fff' : 'background:var(--g);color:var(--p)';
+  var avTxt = role==='ai' ? 'AI' : ((window._userProfile||{}).fullName||'U').split(' ').map(function(n){return n[0];}).join('').toUpperCase().slice(0,2);
+  div.innerHTML='<div class="msg-av" style="'+avBg+'">'+avTxt+'</div><div><div class="bubble">'+text+'</div><div class="msg-t">'+t+'</div></div>';
+  area.appendChild(div); area.scrollTop=area.scrollHeight;
+}
+function addTyping() {
+  var area = document.getElementById('chat-area');
+  var div = document.createElement('div');
+  div.className='msg';
+  div.innerHTML='<div class="msg-av" style="background:var(--pm);color:#fff">AI</div><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
+  area.appendChild(div); area.scrollTop=area.scrollHeight;
+  return div;
+}
+</script>
+
+<!-- FIREBASE + PAYMENT LOGIC -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const fbConfig = {
+  apiKey:"AIzaSyBGSPnBkUd6nioTpgvJB0988leLQ9e3UIs",
+  authDomain:"onepay-b37ae.firebaseapp.com",
+  projectId:"onepay-b37ae",
+  storageBucket:"onepay-b37ae.firebasestorage.app",
+  messagingSenderId:"69365315474",
+  appId:"1:69365315474:web:3c60e192b49c554738f34b"
+};
+const app = initializeApp(fbConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── AUTH STATE ──
+onAuthStateChanged(auth, async (user) => {
+  if(user) {
+    window._currentUser = user;
+    try {
+      const snap = await getDoc(doc(db,'users',user.uid));
+      if(snap.exists()) {
+        window._userProfile = snap.data();
+        applyProfile(snap.data());
+        loadTxns(user.uid);
+      }
+    } catch(e){ console.warn(e); }
+    // Auto go to dashboard if on auth screens
+    const cur = document.querySelector('.sc.on');
+    if(cur && (cur.id==='s-splash'||cur.id==='s-login'||cur.id==='s-signup')) go('s-dashboard');
+  } else {
+    window._currentUser = null;
+    window._userProfile = null;
+  }
+});
+
+function applyProfile(p) {
+  const ini = (p.fullName||'U').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const fmt = n => '₦ '+Number(n||0).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const uid_short = 'OP-NG-'+(p.uid||'').slice(0,5).toUpperCase();
+  // Dashboard
+  const dn=document.getElementById('d-name'); if(dn) dn.textContent=p.fullName||'User';
+  const db2=document.getElementById('d-bal'); if(db2) db2.textContent=fmt(p.balance);
+  const din=document.getElementById('d-in'); if(din) din.textContent='₦'+Number(p.totalIn||0).toLocaleString();
+  const dout=document.getElementById('d-out'); if(dout) dout.textContent='₦'+Number(p.totalOut||0).toLocaleString();
+  // Profile
+  const pav=document.getElementById('p-av'); if(pav) pav.textContent=ini;
+  const pn=document.getElementById('p-name'); if(pn) pn.textContent=p.fullName||'';
+  const pi=document.getElementById('p-id'); if(pi) pi.textContent=uid_short+' · '+(p.country||'Nigeria');
+  const pb=document.getElementById('p-bal'); if(pb) pb.textContent=fmt(p.balance);
+  // Personal info screen
+  const pin=document.getElementById('pi-name'); if(pin) pin.textContent=p.fullName||'—';
+  const pie=document.getElementById('pi-email'); if(pie) pie.textContent=p.email||'—';
+  const pip=document.getElementById('pi-phone'); if(pip) pip.textContent=p.phone||'—';
+  const pic=document.getElementById('pi-country'); if(pic) pic.textContent=p.country||'Nigeria';
+  const piid=document.getElementById('pi-id'); if(piid) piid.textContent=uid_short;
+  // Security — update safe count
+  const ss=document.getElementById('sec-safe'); if(ss) ss.textContent=window._userTxns?window._userTxns.length:0;
+}
+
+async function loadTxns(uid) {
+  try {
+    const q = query(collection(db,'users',uid,'transactions'),orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+    const txns=[];
+    snap.forEach(d=>txns.push({id:d.id,...d.data()}));
+    window._userTxns = txns;
+    renderTxns(txns);
+    const ss=document.getElementById('sec-safe'); if(ss) ss.textContent=txns.length;
+  } catch(e){ console.warn(e); }
+}
+window._loadTxns = loadTxns;
+
+function renderTxns(txns) {
+  const list = document.getElementById('d-txns');
+  if(!list) return;
+  if(!txns||!txns.length) {
+    list.innerHTML='<div class="empty"><div class="empty-ico">💳</div><div class="empty-title">No transactions yet</div><div class="empty-sub">Your transaction history will appear here after your first payment.</div></div>';
+    return;
+  }
+  const clrs=['background:#EEEDFE;color:#534AB7','background:#EAF3DE;color:#3B6D11','background:#FAEEDA;color:#854F0B','background:#E1F5EE;color:#0F6E56'];
+  list.innerHTML = txns.slice(0,10).map((t,i)=>{
+    const isOut=t.type==='debit';
+    const name=t.recipientName||'Transfer';
+    const ini=name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const date=t.createdAt?.toDate?new Date(t.createdAt.toDate()).toLocaleDateString('en-NG',{month:'short',day:'numeric'}):'Recent';
+    return `<div class="txn">
+      <div class="txn-av" style="${clrs[i%4]}">${ini}</div>
+      <div style="flex:1"><div class="txn-name">${name}</div><div class="txn-det">${t.description||''}</div><div class="txn-pill">Delivered</div></div>
+      <div class="txn-amt"><div class="txn-val ${isOut?'out':'in'}">${isOut?'-':'+'}₦${Number(t.amount||0).toLocaleString()}</div><div class="txn-time">${date}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── SIGNUP ──
+window.doSignup = async function() {
+  const name=document.getElementById('su-name').value.trim();
+  const email=document.getElementById('su-email').value.trim();
+  const phone=document.getElementById('su-phone').value.trim();
+  const country=document.getElementById('su-country').value;
+  const currency=document.getElementById('su-currency').value;
+  const pass=document.getElementById('su-pass').value;
+  const err=document.getElementById('su-err');
+  err.style.display='none';
+  if(!name||!email||!phone||!pass){err.textContent='Please fill in all fields.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  const btn=document.getElementById('su-btn');
+  btn.textContent='Creating account…';btn.disabled=true;
+  try {
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    const uid=cred.user.uid;
+    const profile={uid,fullName:name,email,phone,country,currency,balance:0,totalIn:0,totalOut:0,createdAt:serverTimestamp()};
+    await setDoc(doc(db,'users',uid),profile);
+    window._userProfile=profile;
+    applyProfile(profile);
+    showToast('Welcome to OnePay, '+name+'! 🎉');
+    go('s-dashboard');
+  } catch(e) {
+    err.textContent=e.code==='auth/email-already-in-use'?'Email already registered. Please login.':e.message;
+    err.style.display='block';
+    btn.textContent='Create my account';btn.disabled=false;
+  }
+};
+
+// ── LOGIN ──
+window.doLogin = async function() {
+  const email=document.getElementById('li-email').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const err=document.getElementById('li-err');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Please enter your email and password.';err.style.display='block';return;}
+  const btn=document.getElementById('li-btn');
+  btn.textContent='Signing in…';btn.disabled=true;
+  try {
+    await signInWithEmailAndPassword(auth,email,pass);
+    showToast('Welcome back! 👋');
+    go('s-dashboard');
+  } catch(e) {
+    err.textContent='Incorrect email or password. Please try again.';
+    err.style.display='block';
+    btn.textContent='Sign in';btn.disabled=false;
+  }
+};
+
+// ── LOGOUT ──
+window.doLogout = async function() {
+  await signOut(auth);
+  window._currentUser=null;window._userProfile=null;
+  showToast('Signed out successfully.');
+  go('s-splash');
+};
+
+// ── CHANGE PASSWORD ──
+window.changePass = async function() {
+  const np=document.getElementById('new-pass').value;
+  const cp=document.getElementById('conf-pass').value;
+  const err=document.getElementById('pass-err');
+  err.style.display='none';
+  if(!np||np.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  if(np!==cp){err.textContent='Passwords do not match.';err.style.display='block';return;}
+  try {
+    await updatePassword(auth.currentUser,np);
+    showToast('Password updated! ✅');
+    document.getElementById('new-pass').value='';
+    document.getElementById('conf-pass').value='';
+    go('s-profile');
+  } catch(e) {
+    err.textContent=e.code==='auth/requires-recent-login'?'Please log out and log in again first.':'Could not update password.';
+    err.style.display='block';
+  }
+};
+
+// ── FLUTTERWAVE PAYMENT ──
+async function flwPay(amount, description, recipientName) {
+  const user=window._userProfile||{};
+  if(!user.email){showToast('Please complete login first.','err');return;}
+  if(!amount||amount<=0){showToast('Please select or enter a valid amount.','err');return;}
+  showToast('Connecting to payment gateway…');
+  try {
+    const txRef='OP-'+Date.now();
+    const res=await fetch('/api/initiate-payment',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({amount,email:user.email,phone:user.phone||'',name:user.fullName||'OnePay User',description,txRef})
+    });
+    const data=await res.json();
+    if(data.status==='success'&&data.paymentLink) {
+      sessionStorage.setItem('op_pending',JSON.stringify({amount,description,recipientName,txRef}));
+      window.location.href=data.paymentLink;
+    } else {
+      showToast(data.message||'Payment could not start. Try again.','err');
+    }
+  } catch(e) {
+    showToast('Connection error. Please check your internet.','err');
+  }
+}
+
+// ── HANDLE RETURN FROM FLUTTERWAVE ──
+async function checkReturn() {
+  const params=new URLSearchParams(window.location.search);
+  const txId=params.get('transaction_id');
+  const status=params.get('status');
+  if(!txId) return;
+  window.history.replaceState({},'',window.location.pathname);
+  const pending=JSON.parse(sessionStorage.getItem('op_pending')||'null');
+  sessionStorage.removeItem('op_pending');
+  if(status==='cancelled'){showToast('Payment cancelled.','err');go('s-dashboard');return;}
+  showToast('Verifying payment…');
+  try {
+    const res=await fetch('/api/verify-payment?transaction_id='+txId);
+    const data=await res.json();
+    if(data.status==='success'&&window._currentUser&&pending) {
+      await addDoc(collection(db,'users',window._currentUser.uid,'transactions'),{
+        type:'debit',amount:pending.amount,recipientName:pending.recipientName,
+        description:pending.description,txRef:data.txRef,flwRef:data.flwRef,
+        status:'successful',createdAt:serverTimestamp()
+      });
+      await loadTxns(window._currentUser.uid);
+      showToast('Payment successful! ✅');
+    } else {
+      showToast('Payment could not be confirmed.','err');
+    }
+  } catch(e){ showToast('Verification error. Check your history.','err'); }
+  go('s-dashboard');
+}
+checkReturn();
+
+// ── PAYMENT TRIGGERS ──
+window.doTransfer = function() {
+  const amtText=document.getElementById('tr-amt').textContent;
+  const amount=parseInt(amtText.replace(/[^\d]/g,''))||0;
+  if(!amount){showToast('Please select an amount.','err');return;}
+  if(!window._currentUser){showToast('Please login first.','err');go('s-login');return;}
+  const narr=document.getElementById('tr-narr').value||'Bank Transfer';
+  const chosen=document.getElementById('bank-chosen-name').textContent||document.getElementById('mfb-chosen-name').textContent||'Transfer';
+  flwPay(amount,narr+' via OnePay',chosen||'Bank Transfer');
+};
+window.doBuyAirtime = function() {
+  const custom=document.getElementById('air-custom').value;
+  const amount=custom?parseInt(custom):airAmt;
+  const phone=document.getElementById('air-phone').value.trim();
+  if(!amount){showToast('Please select an airtime amount.','err');return;}
+  if(!phone){showToast('Please enter a phone number.','err');return;}
+  if(!window._currentUser){showToast('Please login first.','err');go('s-login');return;}
+  flwPay(amount,airNet+' Airtime for '+phone,phone);
+};
+window.doBuyData = function() {
+  if(!datPrice){showToast('Please select a data plan.','err');return;}
+  const phone=document.getElementById('dat-phone').value.trim();
+  if(!phone){showToast('Please enter a phone number.','err');return;}
+  if(!window._currentUser){showToast('Please login first.','err');go('s-login');return;}
+  flwPay(datPrice,datNet+' '+datSize+' Data for '+phone,phone);
+};
+</script>
+</body>
+</html>
